@@ -64,4 +64,15 @@ WARDEN_OPERATOR_PASS=warden-dev
 
 ## Production
 
-Infisical → keyring / `/run/warden-secrets`. Never paste secrets into chat or git.
+Infisical → keyring `/run/shippin-secrets` (`/run/warden-secrets` is a compatibility symlink). Never paste secrets into chat or git.
+
+## S3 backup connector (Slice 1)
+
+Save from `/admin/proxmox` → **Backup**, or:
+
+```bash
+cp secrets/s3.env.example secrets/s3.env
+# fill S3_* + RESTIC_PASSWORD; never commit
+```
+
+R2 / MinIO / AWS / B2 all work (S3 API). The connector is also mirrored to `/run/shippin-secrets/s3.env`.

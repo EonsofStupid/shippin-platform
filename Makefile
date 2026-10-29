@@ -36,9 +36,9 @@ verify-slice0:
 	bash scripts/dev/verify-slice0.sh
 
 build-api:
-	cd services/warden-api && go build -o /tmp/warden-api ./cmd/warden-api
+	cd services/shippin-api && go build -o /tmp/shippin-api ./cmd/shippin-api
 	cd services/clyffe-api && go build -o /tmp/clyffe-api ./cmd/clyffe-api
-	@echo "binaries: /tmp/warden-api /tmp/clyffe-api"
+	@echo "binaries: /tmp/shippin-api /tmp/clyffe-api"
 
 build-console:
 	npm run build

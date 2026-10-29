@@ -36,10 +36,12 @@ func main() {
 
 	pool, err := platform.NewPool(ctx, cfg.DBURL)
 	if err != nil {
-		log.Fatalf("database: %v", err)
+		log.Printf("database unavailable: %v (inventory/backup save still served)", err)
+		pool = nil
+	} else {
+		defer pool.Close()
+		log.Printf("connected to postgres")
 	}
-	defer pool.Close()
-	log.Printf("connected to postgres")
 
 	// Contexts (bounded contexts wired here).
 	auditSink := audit.New(pool)
@@ -55,6 +57,10 @@ func main() {
 	r.Use(platform.CORS)
 
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		if pool == nil {
+			platform.JSON(w, http.StatusOK, map[string]any{"status": "degraded", "service": "shippin-api", "db": false})
+			return
+		}
 		if err := pool.Ping(r.Context()); err != nil {
 			platform.Error(w, http.StatusServiceUnavailable, "db unreachable")
 			return
@@ -77,8 +83,11 @@ func main() {
 	edge.NewHandler(edge.NewStore(pool), operatorAuthz).Routes(r)
 	connect.NewHandler(connect.NewStore(cfg.RepoRoot), operatorAuthz).Routes(r)
 	clyffy.NewHandler(clyffy.NewStore(pool)).Routes(r)
-	// Slice 0: Proxmox substrate inventory + task-true start/stop.
-	proxmox.NewHandler(proxmox.NewService(proxmox.LoadConfig(), pool, auditSink)).Routes(r)
+	// Slice 0/1: Proxmox inventory + start/stop + backup tab (S3 connector, restic, vzdump).
+	proxmox.NewHandler(proxmox.NewService(proxmox.LoadConfig(), pool, auditSink, cfg.RepoRoot), operatorAuthz).Routes(r)
+
+	// Same origin as the API so LAN/Tailscale can open :8081/admin/proxmox.
+	r.NotFound(platform.ConsoleProxy().ServeHTTP)
 
 	srv := &http.Server{
 		Addr:              cfg.Addr,

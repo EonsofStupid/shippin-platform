@@ -22,7 +22,7 @@ fi
 : "${WARDEN_INFISICAL_ENV:=dev}"
 : "${WARDEN_SHARED_STORAGE_INFISICAL_PATH:=/warden/shared-storage/01}"
 : "${WARDEN_SHARED_STORAGE_SECRET_NAME:=WARDEN_SHARED_STORAGE_01_SMB_PASSWORD}"
-: "${WARDEN_STORAGE_CRED_FILE:=/run/warden-secrets/warden-shared-storage-01.smb}"
+: "${WARDEN_STORAGE_CRED_FILE:=/run/shippin-secrets/warden-shared-storage-01.smb}"
 
 SERVICE_NAME="${WARDEN_STORAGE_SERVICE_NAME}"
 SMB_HOST="${WARDEN_STORAGE_SMB_HOST}"
@@ -55,7 +55,7 @@ Defaults:
   Local path: /mnt/warden/storage or /workspace/warden-storage
 
 The mount command brokers the SMB password through warden-capsule/Infisical and
-writes a temporary CIFS credentials file under /run/warden-secrets.
+writes a temporary CIFS credentials file under /run/shippin-secrets.
 USAGE
 }
 
@@ -129,7 +129,8 @@ write_credentials() {
     exit 1
   fi
 
-  install -d -m 0700 /run/warden-secrets
+  install -d -m 0700 /run/shippin-secrets
+  ln -sfn shippin-secrets /run/warden-secrets 2>/dev/null || true
   {
     printf 'username=%s\n' 'warden-share'
     printf 'password=%s\n' "${password}"

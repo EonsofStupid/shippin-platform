@@ -6,14 +6,20 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 // tree from src/routes/ and wires the client/server entries. Pin the
 // @tanstack/* versions on install and confirm the plugin import path
 // ("@tanstack/react-start/plugin/vite") matches the installed release.
+const hmrClientPort = process.env.SHIPPIN_HMR_CLIENT_PORT
+  ? Number(process.env.SHIPPIN_HMR_CLIENT_PORT)
+  : undefined;
+
 export default defineConfig({
   plugins: [tanstackStart(), react()],
   server: {
-    host: "127.0.0.1",
-    port: 5173,
+    host: process.env.SHIPPIN_CONSOLE_HOST ?? "127.0.0.1",
+    port: Number(process.env.SHIPPIN_CONSOLE_PORT ?? "5173"),
+    allowedHosts: true,
+    hmr: hmrClientPort ? { clientPort: hmrClientPort } : undefined,
     proxy: {
-      "/api": { target: "http://127.0.0.1:8081", changeOrigin: true },
-      "/healthz": { target: "http://127.0.0.1:8081", changeOrigin: true },
+      "/api": { target: process.env.SHIPPIN_API_PROXY ?? "http://127.0.0.1:8081", changeOrigin: true },
+      "/healthz": { target: process.env.SHIPPIN_API_PROXY ?? "http://127.0.0.1:8081", changeOrigin: true },
     },
   },
 });

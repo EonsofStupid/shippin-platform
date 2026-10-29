@@ -5,7 +5,8 @@
 //                                   starts warden-infisical-agent.service
 //   - warden-infisical-status      the Infisical state machine
 //   - warden-devstation-status     host/workspace/tools/git
-//   - /run/warden-secrets          volatile runtime keyring (token sink)
+//   - /run/shippin-secrets         volatile runtime keyring (token sink)
+//   - /run/warden-secrets          compatibility symlink to the keyring
 // Secrets are never logged, never written to W, never placed in plaintext on
 // disk — the bootstrap encrypts them at rest with systemd-creds.
 package connect

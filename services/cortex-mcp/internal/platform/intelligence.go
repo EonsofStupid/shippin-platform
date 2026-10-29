@@ -10,7 +10,7 @@ import (
 // Defaults follow the captured foundation map (Qdrant LXC 106, SurrealDB LXC
 // 104 — the self-hosted target of the Surreal-Cloud migration). Credentials
 // are NEVER stored here or in any plugin package: Secret() resolves refs from
-// the environment or the Infisical-materialized /run/warden-secrets tmpfs.
+// the environment or the Infisical-materialized /run/shippin-secrets tmpfs.
 type IntelligenceConfig struct {
 	QdrantURL  string
 	SurrealURL string
@@ -37,11 +37,13 @@ func Secret(name string) string {
 	if v := os.Getenv(name); v != "" {
 		return v
 	}
-	b, err := os.ReadFile(filepath.Join("/run/warden-secrets", strings.ToLower(name)))
-	if err != nil {
-		return ""
+	for _, dir := range []string{"/run/shippin-secrets", "/run/warden-secrets"} {
+		b, err := os.ReadFile(filepath.Join(dir, strings.ToLower(name)))
+		if err == nil && len(b) > 0 {
+			return strings.TrimSpace(string(b))
+		}
 	}
-	return strings.TrimSpace(string(b))
+	return ""
 }
 
 func envOr(key, def string) string {

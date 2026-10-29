@@ -18,7 +18,7 @@ turnkey/
   etc/warden/infisical/
     agent-config.yaml            /etc/warden/infisical/  — universal-auth reading
                                  the systemd-decrypted creds at /run/credentials,
-                                 token sink /run/warden-secrets/infisical-access-token
+                                 token sink /run/shippin-secrets/infisical-access-token
   systemd/
     warden-infisical-agent.service  LoadCredentialEncrypted; runs as wardenop
 ```
@@ -30,10 +30,11 @@ turnkey/
    --with-key=host` under `/etc/credstore.encrypted/` (`0600`, root).
 2. `warden-infisical-agent.service` decrypts them into
    `/run/credentials/warden-infisical-agent.service/` and the Infisical agent
-   exchanges them for a token at `/run/warden-secrets/infisical-access-token`.
+   exchanges them for a token at `/run/shippin-secrets/infisical-access-token`.
 3. Process secrets live only on the volatile runtime keyring
-   `/run/warden-secrets` (`0700`, reboot-cleared), managed by the
-   `warden-secret-*` helpers. `static_pat` is **break-glass only**.
+   `/run/shippin-secrets` (`0700`, reboot-cleared), managed by the
+   `shippin-secret-*` helpers (`warden-secret-*` is a compatibility wrap).
+   `static_pat` is **break-glass only**. `/run/warden-secrets` is a symlink.
 
 ## The one operator action
 

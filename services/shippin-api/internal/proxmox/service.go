@@ -13,18 +13,19 @@ import (
 
 // Service owns inventory + task-true guest actions (control plane).
 type Service struct {
-	cfg   Config
-	cli   *Client
-	db    *pgxpool.Pool
-	audit *audit.Sink
+	cfg      Config
+	cli      *Client
+	db       *pgxpool.Pool
+	audit    *audit.Sink
+	repoRoot string
 }
 
-func NewService(cfg Config, db *pgxpool.Pool, au *audit.Sink) *Service {
+func NewService(cfg Config, db *pgxpool.Pool, au *audit.Sink, repoRoot string) *Service {
 	var cli *Client
 	if cfg.Configured() {
 		cli = NewClient(cfg)
 	}
-	return &Service{cfg: cfg, cli: cli, db: db, audit: au}
+	return &Service{cfg: cfg, cli: cli, db: db, audit: au, repoRoot: repoRoot}
 }
 
 // Status is operator-facing connectivity/config state (no secrets).

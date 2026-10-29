@@ -66,7 +66,7 @@ export function ConnectView() {
       </div>
 
       <Card title="Connect Infisical (machine identity / PAT)">
-        <p className="muted">Paste a LIVE Universal-Auth client secret. Written root-only to /etc/warden; the broker authenticates and materializes /run/warden-secrets.</p>
+        <p className="muted">Paste a LIVE Universal-Auth client secret. Written root-only to /etc/warden; the broker authenticates and materializes /run/shippin-secrets.</p>
         <form className="edge-add" onSubmit={(e) => activate(e, "infisical")}>
           <input aria-label="infisical client secret" type="password" placeholder="client secret" value={infisicalSecret} onChange={(e) => setInfisicalSecret(e.target.value)} autoComplete="off" />
           <Button type="submit" tone="brand" variant="solid" isDisabled={busy || !infisicalSecret}>

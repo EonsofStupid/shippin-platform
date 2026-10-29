@@ -1,14 +1,20 @@
-# WardenClyffe Architecture
+# Shippin management architecture (legacy Warden/Clyffe implementation)
 
-This repo is being oriented around two branded products:
+This repo implements two Shippin management surfaces using legacy module
+names:
 
-- **Warden** is the operator/server-control platform.
-- **Clyffe** is the customer portal, customer knowledge base, and tenant-safe service surface.
+- **Warden** is the Shippin operator/server-control implementation.
+- **Clyffe** is the Shippin customer portal, customer knowledge base, and tenant-safe service implementation.
 
-Warden and Clyffe are not separate ideas. They are the two faces of WardenClyffe:
+They are two Shippin surfaces, not a product named WardenClyffe:
 
-- Warden owns infrastructure authority.
-- Clyffe consumes scoped Warden APIs on behalf of customers.
+- Shippin owns infrastructure authority through the current Warden implementation.
+- Shippin Estate/Clyffe consumes scoped Shippin APIs on behalf of customers.
+
+**Wardenclyffe is specifically the Zuul zero-mesh product.** It owns private
+connectivity, peer/device enrollment, mesh policy, reachability, relay, mesh
+health, and mesh-service discovery. It does not own Shippin customer or
+infrastructure management.
 
 Canonical module labels:
 
@@ -22,15 +28,19 @@ should use Warden and Clyffe.
 
 ## Internal-First Goal
 
-The first target is a turnkey WardenClyffe deployment for our own two servers.
+The first target is a turnkey Shippin management deployment for our own two servers.
 
 For this phase, Proxmox VE is treated as the local infrastructure substrate:
 
 - Proxmox provides KVM, LXC, storage, networking, backups, tasks, consoles, and cluster primitives.
-- Warden provides the modern operator experience, automation layer, AI assistant, and API.
-- Clyffe provides the customer portal and knowledge base using Warden's tenant-safe API.
+- The Warden implementation provides Shippin's modern operator experience, automation layer, AI assistant, and API.
+- The Clyffe implementation provides Shippin Estate's customer portal and knowledge base using tenant-safe Shippin APIs.
 
-The long-term direction is that WardenClyffe progressively absorbs the workflows we need from Proxmox and modernizes them under our own Warden/Clyffe product identity. We are not starting with a hard fork. We are starting with a Proxmox-native control plane that can later become deeper and more self-contained where it makes sense.
+The long-term direction is that Shippin progressively absorbs the workflows we
+need from Proxmox and modernizes them under Shippin product ownership. We are
+not starting with a hard fork. We are starting with a Proxmox-native
+compatibility adapter and control-plane implementation that can later become
+deeper and more self-contained where it makes sense.
 
 ## Product Boundary
 
@@ -48,7 +58,9 @@ Responsibilities:
 - Host the infrastructure AI assistant and MCP meshnode.
 - Own credentials, audit logs, tenant boundaries, and infrastructure inventory.
 
-Warden may talk directly to Proxmox APIs, local Linux tools, WardenClyffeNet, WardenClyffeDisk, Qdrant, PostgreSQL, and other internal services.
+Warden may talk directly to Proxmox APIs, local Linux tools, legacy-named
+WardenClyffeNet and WardenClyffeDisk compatibility services, Qdrant,
+PostgreSQL, and other internal services.
 
 Warden also owns private operator workspaces:
 
@@ -62,7 +74,7 @@ These are not customer workspaces.
 
 ### Clyffy MCP Orchestrator
 
-Clyffy is the main MCP orchestrator and assistant runtime for WardenClyffe. It
+Clyffy is the main MCP orchestrator and assistant runtime for Shippin. It
 does not replace Warden authority or Clyffe customer boundaries. It organizes
 the tool mesh, workspace memory, agent handoffs, Qdrant retrieval, SurrealDB
 graph projections, and Clyffy Master assistant workflows.
@@ -113,7 +125,7 @@ Core customer views:
 - Console: controlled console access only for assigned guests.
 - Backups: available restore points and restore requests.
 - Tickets: support requests, incidents, approvals, notes, attachments, and status.
-- Knowledge base: WardenClyffe docs, service guides, runbooks, and customer-safe AI answers.
+- Knowledge base: Shippin docs, service guides, runbooks, and customer-safe AI answers.
 - Account/CRM: contacts, organizations, service notes, plan details, invoices or billing-provider links.
 
 Customer actions must be permission-scoped, rate-limited, and audit-logged. Any action that can destroy data, alter networking, change billing, or affect other tenants should become a request or approval workflow rather than direct execution.
@@ -177,9 +189,9 @@ Current candidates:
 - **Dragonfly/Redis-compatible cache or NATS** for sessions, queues, events,
   and long-running job coordination if those workloads need a separate layer.
 
-WardenClyffeScale can remain a separate database replication product or
-managed service offering. It should inform the platform, but it should not by
-itself decide the primary Warden/Clyffe storage backend.
+WardenClyffeScale remains a legacy-named, separate database replication
+product or managed service offering. It is not part of Wardenclyffe/Zuul and
+does not decide Shippin's primary storage backend by itself.
 
 ## Auth Options Under Review
 
@@ -202,7 +214,7 @@ For the internal two-server phase, Warden can start with a small local admin boo
 
 Warden's AI system is an operator assistant first:
 
-- Understand server inventory, Proxmox state, WardenClyffe docs, logs, incidents, and projects.
+- Understand server inventory, Proxmox state, Shippin infrastructure docs, logs, incidents, and projects.
 - Propose actions with risk levels.
 - Require explicit approval before any write or destructive operation.
 - Store embeddings in Qdrant.
@@ -218,8 +230,11 @@ Clyffe's AI system is customer-safe:
 
 ## Branding Rule
 
-The platform should be presented as WardenClyffe:
+The customer and infrastructure management platform is presented as
+**Shippin**:
 
-- Warden for server/operator control.
-- Clyffe for customer portal and knowledge base.
-- No legacy-branded filenames, graphics, links, screenshots, CLI names, or documentation should remain in final product surfaces.
+- Shippin Operator for trusted server/operator control.
+- Shippin Estate for the customer portal and knowledge base.
+- Wardenclyffe only for the Zuul zero-mesh product.
+- Warden/Clyffe filenames, schemas, and CLI names may remain during migration
+  where compatibility requires them; they are not current product ownership.

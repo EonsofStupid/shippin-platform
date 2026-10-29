@@ -34,7 +34,7 @@ Codex / Claude). Operated as a Warden-managed service by **Hades**.
 |---|---|---|
 | C1 | The `104 → 204` migration is the **public ingress IP** (`104.176.44.101` today → a new `204.x.x.x`). | exact target `204.x.x.x`; provider; cutover window |
 | C2 | "Branded copy of Tailscale managed by us" = **Headscale** (self-hosted Tailscale control plane) as WardenNet, with OPNsense WireGuard as failsafe. | confirm Headscale vs alternative |
-| C3 | **DevForge** hosted VSCode = `code-server` now, with an `openvscode-server` / Coder evaluation for Marketplace parity later. | confirm engine + Marketplace policy |
+| C3 | **DevSpace** uses **Coder** (paid/waived, included). DevForge remains the Code-OSS editor on that workspace. Not an evaluation. Not later. | none — see `../shippin/docs/platform/PRIVATE-CLOUD-COMMUNITY.md` |
 | C4 | Local tools (Gemini CLI, Cursor, Antigravity, Codex, Claude) connect over **WardenNet + Remote-SSH**, not public exposure. | confirm |
 
 ## 1. Roles & ownership

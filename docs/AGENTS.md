@@ -12,9 +12,11 @@ wardenclyffe_touchpoint:
 
 The repo-root `AGENTS.md` applies here.
 
-Docs should clarify Warden/Clyffe product boundaries, Proxmox substrate
-strategy, MCP mesh touchpoints, intelligence-layer contracts, and the canonical
-Module 1 Warden / Module 2 Clyffe split.
+Docs should clarify that Shippin owns customer and infrastructure management,
+while Wardenclyffe is the Zuul zero-mesh product. They may retain Warden and
+Clyffe as implementation/module compatibility names. Docs also cover Proxmox
+substrate strategy, MCP mesh touchpoints, intelligence-layer contracts, and
+the legacy Module 1 Warden / Module 2 Clyffe planning split.
 
 Use `docs/ai/TOUCHPOINT_TEMPLATE.md` when adding new agent-facing touchpoints.
 

@@ -3,7 +3,7 @@ package platform
 import "os"
 
 // Config holds runtime configuration for clyffe-api. Secrets come from the
-// environment (populated from Infisical / /run/warden-secrets in production).
+// environment (populated from Infisical / /run/shippin-secrets in production).
 //
 // Boundary: clyffe-api is the customer-facing plane. In production its DBURL
 // should use a least-privilege role scoped to the customer-safe schemas

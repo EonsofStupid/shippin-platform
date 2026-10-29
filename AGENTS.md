@@ -9,7 +9,7 @@ wardenclyffe_touchpoint:
   intelligence_contract: docs/ai/INTELLIGENCE_TOUCHPOINTS.md
 ---
 
-# WardenClyffe Agent Contract
+# Shippin Platform Agent Contract
 
 This is the root project context for Codex, Claude, Cursor, Gemini, and
 other coding agents working in this repository.
@@ -17,22 +17,38 @@ other coding agents working in this repository.
 Read this before making changes. Subtree `AGENTS.md` files add local rules
 and nearest file wins for that subtree.
 
+## Paid engines — no penalty box
+
+Umbrella law: `../shippin/docs/platform/PRIVATE-CLOUD-COMMUNITY.md`.
+
+Coder on a workspace is a Shippin **DevSpace**. It is included in the
+private-cloud community, same class as Chatmaton. Nomen is the IdP
+(`../tessera`). Do not treat AGPL, “evaluate Coder later,” or
+“customers must never see the engine” as a reason to disable what was
+paid for. That sentence is void.
+
 ## What This Repo Is
 
-WardenClyffe is being moved into a clean Warden/Clyffe product split:
+This repository is active implementation and migration evidence for the
+**Shippin** customer and infrastructure management platform:
 
-- **Warden** is the operator/server-control platform.
-- **Clyffe** is the customer portal, knowledge base, tickets, CRM, and
-  customer-safe service panel.
-- **Module 1** is Warden. **Module 2** is Clyffe. Module numbers are planning
-  labels; product/code names should stay Warden and Clyffe.
-- Proxmox is the current infrastructure substrate for the internal
+- **Shippin** owns customer, entitlement, workspace, host, infrastructure
+  lifecycle, backup/recovery, Operator, and Estate truth.
+- **Warden** is a legacy implementation/module name for operator and
+  server-control code under Shippin.
+- **Clyffe** is a legacy implementation/module name for customer-safe portal,
+  knowledge, ticket, CRM, and service-panel code under Shippin.
+- **Wardenclyffe is specifically the Zuul zero-mesh product**, not the name of
+  the Warden/Clyffe split and not the Shippin infrastructure manager.
+- **Module 1** and **Module 2** remain planning labels only.
+- Proxmox is one current Shippin infrastructure substrate for the internal
   two-server pilot.
 
-The nested `wardenclyffe/` repo contains the active Go Warden work and
-the most complete Context Mesh/MCP/intelligence scaffold. Treat it as an
-important source of current operational truth, but do not mutate it unless
-the task is explicitly about the Go Warden repo.
+The nested `wardenclyffe/` repo name is a compatibility identifier. It
+contains active Go Warden implementation and Context Mesh/MCP/intelligence
+scaffolding, but it is not Wardenclyffe/Zuul product authority. Treat it as an
+important source of current Shippin operational evidence, and do not mutate it
+unless the task is explicitly about that Go implementation repo.
 
 ## Read Next
 
@@ -126,8 +142,9 @@ Do not let wrappers become new authorities. Update the base files under
 - Treat customer actions as tenant-scoped and audit-logged.
 - Treat destructive infrastructure actions as approval workflows unless a
   human explicitly asks for execution.
-- Preserve Warden/Clyffe terminology. Warden is operator-facing; Clyffe is
-  customer-facing.
+- Preserve Warden/Clyffe identifiers where code compatibility requires them,
+  but use Shippin for product ownership. Wardenclyffe names the Zuul zero-mesh
+  product only.
 
 ## MCP And Intelligence Rule
 

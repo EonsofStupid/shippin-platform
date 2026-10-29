@@ -1,8 +1,9 @@
-// Slice 0 — Warden technical view: Proxmox is the OS for VMs/LXCs; Warden manages it.
+// Slice 0/1 — Proxmox substrate: fleet inventory + backup tab.
 import { useCallback, useEffect, useState } from "react";
-import { Badge, Button, Card } from "../../../../lib/design";
+import { Badge, Button, Card, Tabs } from "../../../../lib/design";
 import { proxmoxService } from "../proxmox.svc";
 import type { GuestActionResult, ProxmoxGuest, ProxmoxStatus } from "../types";
+import { BackupPanel } from "./BackupPanel";
 
 function fmtMem(bytes?: number) {
   if (!bytes) return "—";
@@ -58,9 +59,38 @@ export function ProxmoxFleetView() {
     <div>
       <h1 className="page-title">Proxmox fleet</h1>
       <p className="page-sub">
-        Proxmox is the substrate (OS for VMs/LXCs). Warden is the technical control plane —
-        inventory + task-true start/stop with audit.
+        Proxmox is the substrate (OS for VMs/LXCs). WardenClyffe is the internal name for these
+        layers — inventory, task-true start/stop, and off-box backup.
       </p>
+      <Tabs
+        items={[
+          { id: "fleet", label: "Fleet", content: <FleetBody status={status} guests={guests} err={err} lastAction={lastAction} busyKey={busyKey} load={load} act={act} /> },
+          { id: "backup", label: "Backup", content: <BackupPanel /> },
+        ]}
+      />
+    </div>
+  );
+}
+
+function FleetBody({
+  status,
+  guests,
+  err,
+  lastAction,
+  busyKey,
+  load,
+  act,
+}: {
+  status: ProxmoxStatus | null;
+  guests: ProxmoxGuest[];
+  err: string | null;
+  lastAction: GuestActionResult | null;
+  busyKey: string | null;
+  load: () => Promise<void>;
+  act: (g: ProxmoxGuest, op: "start" | "stop") => Promise<void>;
+}) {
+  return (
+    <div>
 
       {status && (
         <Card

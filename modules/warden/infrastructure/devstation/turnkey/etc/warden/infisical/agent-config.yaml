@@ -15,4 +15,4 @@ auth:
 sinks:
   - type: "file"
     config:
-      path: "/run/warden-secrets/infisical-access-token"
+      path: "/run/shippin-secrets/infisical-access-token"

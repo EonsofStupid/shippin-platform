@@ -85,8 +85,9 @@ recommendation with rationale:
 
 **Layer 3 — Remote-local AI tooling bridge**
 5. Authoritative connection models for **Claude Code, Codex CLI, Cursor, Gemini CLI**
-   into a remote Linux VM (Remote-SSH vs. tunnels vs. browser IDE: `code-server` /
-   `openvscode-server` / Coder). Extension-fidelity and marketplace constraints. Which
+   into a remote Linux VM (Remote-SSH vs. tunnels vs. browser IDE). **Coder is
+   the included DevSpace engine** (paid/waived; not an evaluation). See
+   `../shippin/docs/platform/PRIVATE-CLOUD-COMMUNITY.md`. Which
    combination gives the truest "local feel"?
 6. How each tool **authenticates and stores credentials** remotely, and how to keep
    those credentials inside the capsule boundary (per #3).

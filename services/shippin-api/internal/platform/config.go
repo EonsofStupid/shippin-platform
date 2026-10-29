@@ -5,7 +5,7 @@ import (
 )
 
 // Config holds runtime configuration for shippin-api. Secrets come from the
-// environment (populated from Infisical / /run/warden-secrets in production).
+// environment (populated from Infisical / /run/shippin-secrets in production).
 type Config struct {
 	Addr     string // listen address, e.g. ":8081"
 	DBURL    string // postgres connection string
@@ -35,7 +35,7 @@ func LoadConfig() Config {
 		LogLevel:     env("SHIPPIN_LOG_LEVEL", "info"),
 		OperatorUser: env("SHIPPIN_OPERATOR_USER", "operator"),
 		OperatorPass: env("SHIPPIN_OPERATOR_PASS", "warden-dev"),
-		RepoRoot:     env("SHIPPIN_REPO_ROOT", "/workspace/WardenClyffe-latest"),
+		RepoRoot:     env("SHIPPIN_REPO_ROOT", "/workspace/warden-storage/projects/shippin-platform"),
 		SyncPlanPath: env("SYNC_PLAN_PATH", "/workspace/warden-storage/registry/projection-plan.json"),
 		SyncBin:      env("SHIPPIN_SYNC_BIN", "/workspace/warden-storage/plugins/bin/intelligence-sync"),
 	}

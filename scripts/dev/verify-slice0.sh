@@ -22,6 +22,7 @@ check() {
 
 check "healthz" "$API/healthz"
 check "proxmox status" "$API/api/warden/proxmox/status"
+check "backup status" "$API/api/warden/proxmox/backup/status"
 
 if curl -sS -m 2 -o /dev/null -w '' "$API/api/warden/proxmox/status" 2>/dev/null; then
   configured=$(python3 -c "import json; print(json.load(open('/tmp/wc-verify.json')).get('configured',False))" 2>/dev/null || echo false)

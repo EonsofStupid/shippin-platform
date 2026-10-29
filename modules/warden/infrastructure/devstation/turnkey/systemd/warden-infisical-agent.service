@@ -13,7 +13,7 @@ Group=wardenop
 UMask=0077
 LoadCredentialEncrypted=infisical-client-id:/etc/credstore.encrypted/infisical-client-id
 LoadCredentialEncrypted=infisical-client-secret:/etc/credstore.encrypted/infisical-client-secret
-RuntimeDirectory=warden-secrets
+RuntimeDirectory=shippin-secrets
 RuntimeDirectoryMode=0700
 RuntimeDirectoryPreserve=yes
 ExecStart=/usr/local/bin/infisical agent --config /etc/warden/infisical/agent-config.yaml --silent
@@ -30,7 +30,7 @@ ProtectKernelLogs=yes
 ProtectKernelModules=yes
 ProtectKernelTunables=yes
 ProtectSystem=strict
-ReadWritePaths=/run/warden-secrets
+ReadWritePaths=/run/shippin-secrets /run/warden-secrets
 RestrictSUIDSGID=yes
 
 [Install]

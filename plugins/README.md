@@ -26,7 +26,7 @@ same contract. (Draft 2020-12; CI validates on change.)
 Rules:
 - `kind`: `control` | `intelligence` | `minion`.
 - **Secrets never live in a package** — `requires.secrets` lists Infisical
-  refs; values materialize at `/run/warden-secrets` on the devstation.
+  refs; values materialize at `/run/shippin-secrets` on the devstation.
 - `mcp_id` follows the mesh grammar; status stays `scaffold` until the ADR
   0030 bar (Streamable HTTP, OAuth 2.1, server card) is met.
 - One shared binary may serve many plugins via `entry.args` (cortex-mcp does).

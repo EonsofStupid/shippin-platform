@@ -15,6 +15,11 @@ clyffy_touchpoint:
 
 # Identity & Tenancy Spec (the "hades" list)
 
+**Supersession (2026-08-29):** The IdP is **Nomen** (`projects/tessera`).
+Do not implement a second identity authority here. Workspace tenancy
+tables may still be Warden/Clyffe product facts; login and seats are
+Nomen. See `../shippin/docs/platform/PRIVATE-CLOUD-COMMUNITY.md`.
+
 Build spec for making a customer real. Production-only baseline. Verified live:
 **PostgreSQL 18.4**, native `uuidv7()`, `pgcrypto`. Owns: warden `identity`
 context + clyffe `account`. Status today: **nothing exists yet** — this is the

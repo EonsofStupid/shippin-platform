@@ -12,30 +12,40 @@ wardenclyffe_touchpoint:
   mesh_registry: wardenclyffe/registry/context-mesh.yaml
 ---
 
-# WardenClyffe Base Skill
+# Shippin Platform Base Skill (legacy WardenClyffe wrapper name)
 
 This is the source skill that other AI wrappers should defer to.
 
 ## Operating Frame
 
-- Warden is the operator/server-control platform.
-- Clyffe is the customer portal, knowledge base, tickets, CRM, and
-  customer-safe service panel.
+- Shippin is the customer and infrastructure management platform.
+- Warden is a legacy implementation/module name for Shippin operator and
+  server-control code.
+- Clyffe is a legacy implementation/module name for Shippin customer portal,
+  knowledge base, tickets, CRM, and customer-safe service-panel code.
+- Wardenclyffe is specifically the Zuul zero-mesh product. It is not the name
+  of this Warden/Clyffe implementation split.
 - Module 1 is Warden. Module 2 is Clyffe. Module numbers are planning labels,
   not durable code names.
 - Proxmox is the current substrate for the internal two-server pilot.
-- The nested `wardenclyffe/` repo contains the active Go Warden scaffold and
-  current Context Mesh registry.
+- The nested `wardenclyffe/` repo name is a compatibility identifier. It
+  contains the active Go Warden scaffold and current Context Mesh registry,
+  but is not Wardenclyffe/Zuul product authority.
 
 ## How Agents Should Work
 
 1. Read the nearest `AGENTS.md` before editing.
-2. Use Warden/Clyffe terminology consistently.
-3. Keep customer-facing actions scoped through Warden APIs.
+2. Use Shippin for product ownership; retain Warden/Clyffe only where code or
+   migration compatibility requires it.
+3. Keep customer-facing actions scoped through Shippin APIs, including legacy
+   Warden implementation endpoints during migration.
 4. Treat MCP mesh definitions as registry-owned, not prose-owned.
 5. Add or update Markdown touchpoints when a new domain, subsystem, or
    intelligence route is introduced.
 6. Never commit secrets or live credential material.
+7. Paid/waived engines are included. Coder is a DevSpace. Nomen is the
+   IdP. Do not re-open Authentik-vs-Zitadel or AGPL-as-blocker.
+   `../shippin/docs/platform/PRIVATE-CLOUD-COMMUNITY.md`.
 
 ## Source-Of-Truth Order
 
@@ -43,6 +53,9 @@ Use this order when sources disagree:
 
 1. Live code and configs in the relevant subtree.
 2. Nearest `AGENTS.md`.
+2a. `../shippin/docs/platform/PRIVATE-CLOUD-COMMUNITY.md` for included engines.
+2b. `../shippin/docs/platform/NAMING-AND-SSOT.md` and
+    `../shippin/docs/platform/PRODUCT-ARCHITECTURE.md` for product ownership.
 3. `docs/WARDENCLYFFE_MODULE_MAP.md`.
 4. `docs/WARDENCLYFFE_NAMING_CONVENTIONS.md`.
 5. `docs/HYPERMODULAR_DDD_FOLDER_STRUCTURE.md`.

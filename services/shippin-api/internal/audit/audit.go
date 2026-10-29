@@ -28,6 +28,9 @@ func (s *Sink) Append(ctx context.Context, e Event) error {
 	} else {
 		raw = []byte("{}")
 	}
+	if s == nil || s.db == nil {
+		return nil
+	}
 	_, err := s.db.Exec(ctx,
 		`INSERT INTO shippin_audit.events (action, target_kind, target_id, data)
 		 VALUES ($1,$2,$3,$4)`,

@@ -1,0 +1,26 @@
+.backup-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--wc-s3);
+  margin: var(--wc-s3) 0;
+}
+.backup-form .span-2,
+.backup-actions {
+  grid-column: 1 / -1;
+}
+.backup-actions {
+  display: flex;
+  gap: var(--wc-s2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.backup-hint {
+  font-size: var(--wc-fs-sm);
+  color: var(--wc-text-dim);
+  margin: 0 0 var(--wc-s3);
+}
+@media (max-width: 720px) {
+  .backup-form { grid-template-columns: 1fr; }
+  .backup-form .span-2,
+  .backup-actions { grid-column: auto; }
+}

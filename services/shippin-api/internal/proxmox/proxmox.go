@@ -291,6 +291,30 @@ func (c *Client) listNodeGuests(ctx context.Context, node string) ([]Guest, erro
 	return out, nil
 }
 
+// Storage is a Proxmox storage record (subset).
+type Storage struct {
+	Storage string `json:"storage"`
+	Type    string `json:"type"`
+	Content string `json:"content"`
+	Active  int    `json:"active,omitempty"`
+	Enabled int    `json:"enabled,omitempty"`
+}
+
+// ListStorage returns datacenter storage (used to pick vzdump targets).
+func (c *Client) ListStorage(ctx context.Context) ([]Storage, error) {
+	var items []Storage
+	if err := c.get(ctx, "/storage", &items); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+// Vzdump starts a guest image backup; returns a UPID.
+func (c *Client) Vzdump(ctx context.Context, node string, form url.Values) (string, error) {
+	path := "/nodes/" + url.PathEscape(node) + "/vzdump"
+	return c.post(ctx, path, form)
+}
+
 // StartGuest posts start; returns UPID string.
 func (c *Client) StartGuest(ctx context.Context, node, kind string, vmid int) (string, error) {
 	path := fmt.Sprintf("/nodes/%s/%s/%d/status/start", url.PathEscape(node), kind, vmid)
@@ -315,6 +339,10 @@ type TaskStatus struct {
 // WaitTask polls task until not running or timeout.
 func (c *Client) WaitTask(ctx context.Context, node, upid string, timeout time.Duration) (*TaskStatus, error) {
 	deadline := time.Now().Add(timeout)
+	interval := 800 * time.Millisecond
+	if timeout > 2*time.Minute {
+		interval = 5 * time.Second
+	}
 	path := fmt.Sprintf("/nodes/%s/tasks/%s/status", url.PathEscape(node), url.PathEscape(upid))
 	for {
 		var st TaskStatus
@@ -330,7 +358,7 @@ func (c *Client) WaitTask(ctx context.Context, node, upid string, timeout time.D
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
-		case <-time.After(800 * time.Millisecond):
+		case <-time.After(interval):
 		}
 	}
 }
