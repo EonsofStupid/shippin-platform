@@ -168,6 +168,17 @@ which do not automatically describe other Lovable traffic. When a provider has
 no suitable fixed range, explain supported alternatives such as an authenticated
 HTTPS API or private tunnel; never silently broaden a firewall rule.
 
+For Incus, choose the enforcement point from the actual network topology. Its
+[bridge ACL limitations](https://linuxcontainers.org/incus/docs/main/howto/network_acls/#bridge-limitations)
+mean a network-level bridge ACL alone does not provide intra-bridge isolation;
+NIC-level ACLs and OVN have different behavior. A
+[proxy device](https://linuxcontainers.org/incus/docs/main/reference/devices_proxy/)
+can also change which client address the database sees, depending on its mode.
+Test source restrictions at the point that sees the real source, including the
+edge and any NAT. The older console's candidate host firewall code uses an
+IPv4-only edge and workspace-tagged ACL rules; review its partial-apply and
+recovery behavior before adopting it for tenant databases or IPv6.
+
 **Credentials and transport:** issue per-instance, least-privilege, revocable
 credentials with separate application and migration permissions; do not expose a
 database password or privileged service key in frontend code, chat prompts,
