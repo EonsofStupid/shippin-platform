@@ -70,9 +70,9 @@ func main() {
 	}
 
 	identity.NewHandler(idStore, identity.NewAccounts(pool)).Routes(r)
-	fleet.NewHandler(fleetStore).Routes(r)
-	automation.NewHandler(automationSvc).Routes(r)
-	data.NewHandler(dataStore).Routes(r)
+	fleet.NewHandler(fleetStore, operatorAuthz).Routes(r)
+	automation.NewHandler(automationSvc, operatorAuthz).Routes(r)
+	data.NewHandler(dataStore, operatorAuthz).Routes(r)
 	mesh.NewHandler(mesh.NewStore(cfg.RepoRoot, cfg.SyncPlanPath, cfg.SyncBin), operatorAuthz).Routes(r)
 	edge.NewHandler(edge.NewStore(pool), operatorAuthz).Routes(r)
 	connect.NewHandler(connect.NewStore(cfg.RepoRoot), operatorAuthz).Routes(r)

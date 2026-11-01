@@ -5,7 +5,13 @@
       "src/domains/warden/proxmox/proxmox.schema.ts",
       "src/domains/warden/proxmox/proxmox.svc.ts",
       "src/domains/warden/proxmox/proxmox.svc.test.mjs",
-      "src/domains/warden/proxmox/types.ts"
+      "src/domains/warden/proxmox/types.ts",
+      "src/domains/warden/data/views/DataBrowserView.tsx",
+      "src/domains/warden/fleet/views/OrderDevstationView.tsx",
+      "src/domains/warden/fleet/views/WorkspacesView.tsx",
+      "src/domains/warden/overview/views/OverviewView.tsx",
+      "src/lib/api.ts",
+      "src/lib/api.test.mjs"
     ]
   },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },

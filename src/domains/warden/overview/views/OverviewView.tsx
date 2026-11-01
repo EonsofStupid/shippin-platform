@@ -1,23 +1,32 @@
 import { useEffect, useState } from "react";
 import { api, type ClyffyHome } from "../../../../lib/api";
-import { PageHeader, Grid, Stack } from "../../../../lib/design";
+import { Grid, PageHeader, Stack } from "../../../../lib/design";
+import { useAuth } from "../../identity";
 import { MetricCard } from "../components/MetricCard";
 import "./OverviewView.css";
 
 /** OverviewView — the post-login operator landing: a compact, optimized
  *  dashboard of the foundation at a glance, on embossed coldlight surfaces. */
 export function OverviewView() {
+  const { token } = useAuth();
   const [workspaces, setWorkspaces] = useState<number | null>(null);
   const [home, setHome] = useState<ClyffyHome | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (token) {
+      api
+        .workspaces(token)
+        .then((r) => setWorkspaces(r.count))
+        .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+    } else {
+      setWorkspaces(null);
+    }
     api
-      .workspaces()
-      .then((r) => setWorkspaces(r.count))
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
-    api.clyffyHome().then(setHome).catch(() => undefined);
-  }, []);
+      .clyffyHome()
+      .then(setHome)
+      .catch(() => undefined);
+  }, [token]);
 
   const owed = home?.summary.config_items_owed ?? null;
 

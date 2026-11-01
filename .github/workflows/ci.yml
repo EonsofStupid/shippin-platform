@@ -13,12 +13,28 @@ on:
 jobs:
   go:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: disposable-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      SHIPPIN_TEST_DISPOSABLE_DATABASE_URL: postgres://postgres:disposable-ci-only@127.0.0.1:5432/postgres?sslmode=disable
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.work
           cache-dependency-path: "**/go.sum"
+      - name: initialize disposable database for operator route integration test
+        run: docker exec -i ${{ job.services.postgres.id }} psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < data/schema/sql/0001_init.sql
       - name: build, vet, test every workspace module
         run: |
           set -euo pipefail

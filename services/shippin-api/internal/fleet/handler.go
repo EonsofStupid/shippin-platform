@@ -11,13 +11,21 @@ import (
 )
 
 // Handler exposes fleet read endpoints under /api/warden/workspaces.
-type Handler struct{ store *Store }
+type Handler struct {
+	store *Store
+	authz platform.Authorizer
+}
 
-func NewHandler(store *Store) *Handler { return &Handler{store: store} }
+func NewHandler(store *Store, authz platform.Authorizer) *Handler {
+	return &Handler{store: store, authz: authz}
+}
 
 func (h *Handler) Routes(r chi.Router) {
-	r.Get("/api/warden/workspaces", h.list)
-	r.Get("/api/warden/workspaces/{id}", h.get)
+	r.Group(func(r chi.Router) {
+		r.Use(platform.RequireOperator(h.authz))
+		r.Get("/api/warden/workspaces", h.list)
+		r.Get("/api/warden/workspaces/{id}", h.get)
+	})
 }
 
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {

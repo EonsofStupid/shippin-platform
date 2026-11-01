@@ -13,9 +13,9 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173",
     "build": "vite build",
-    "check:quality": "biome check src/domains/warden/proxmox",
+    "check:quality": "biome check src/domains/warden/proxmox src/domains/warden/data/views/DataBrowserView.tsx src/domains/warden/fleet/views/OrderDevstationView.tsx src/domains/warden/fleet/views/WorkspacesView.tsx src/domains/warden/overview/views/OverviewView.tsx src/lib/api.ts src/lib/api.test.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "node --test src/domains/warden/proxmox/proxmox.svc.test.mjs",
+    "test": "node --test src/domains/warden/proxmox/proxmox.svc.test.mjs src/lib/api.test.mjs",
     "preview": "vite preview --host 127.0.0.1 --port 5173",
     "setup": "bash scripts/dev/setup-prerelease.sh",
     "stack": "bash scripts/dev/run-stack.sh",
