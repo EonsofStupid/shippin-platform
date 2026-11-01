@@ -10,6 +10,7 @@ import (
 	"crypto/subtle"
 	"encoding/hex"
 	"errors"
+	"strings"
 	"sync"
 	"time"
 )
@@ -43,6 +44,9 @@ func NewStore(user, pass string) *Store {
 
 // Login validates the credential (constant-time) and issues a token.
 func (s *Store) Login(user, pass string) (string, Operator, error) {
+	if strings.TrimSpace(s.user) == "" || strings.TrimSpace(s.pass) == "" {
+		return "", Operator{}, ErrInvalid
+	}
 	uOK := subtle.ConstantTimeCompare([]byte(user), []byte(s.user)) == 1
 	pOK := subtle.ConstantTimeCompare([]byte(pass), []byte(s.pass)) == 1
 	if !uOK || !pOK {
