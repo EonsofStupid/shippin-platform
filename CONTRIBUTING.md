@@ -37,3 +37,11 @@ The application is not yet a verified server installation. A passing build or
 mocked HTTP test does not establish secure deployment, node enrollment, real
 provider operation, upgrade or recovery. Preserve local work and review existing
 services and configuration before migrating or deploying them.
+
+For Proxmox development, configure the host and API token using the environment
+example. TLS certificate and hostname verification are required. If the server
+uses a private CA, set `PROXMOX_CA_CERT` to its trusted PEM certificate bundle.
+An existing `PROXMOX_VERIFY_TLS=false` setting is rejected; update the setting
+and establish trust instead of disabling verification. `PROXMOX_NODE` may be
+empty for inventory across nodes. No test in this repository proves that a
+particular Proxmox host or its credentials work.
