@@ -17,6 +17,12 @@ alone do not establish compatibility, security or deployability.
 - The existing API still exposes other routes without a complete authorization
   model. Development configuration includes shared defaults. The current
   application is not ready to expose on a server or offer as a release.
+- The existing customer home, accounts and orders routes return 503 until real
+  customer authentication and tenant-scoped access are implemented and tested.
+- The historical identity migration seeds installation-specific account data.
+  Clean installs must not create a personal account by default; reconcile that
+  migration and existing databases without deleting real customer records before
+  declaring the installer ready.
 - Feature branches, local changes, Warden sources, earlier API contracts, panel
   code and installer work require individual review and reconciliation. Preserve
   the existing work until the relevant behavior and history are accounted for.
