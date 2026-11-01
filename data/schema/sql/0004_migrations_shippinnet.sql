@@ -24,14 +24,6 @@ CREATE TABLE IF NOT EXISTS shippin_infra.ip_migrations (
     updated_at  timestamptz NOT NULL DEFAULT now()
 );
 
--- WardenNet (Headscale) as a network platform Warden manages.
-INSERT INTO shippin_infra.platforms (stable_id, kind, host_id, api_endpoint, network_name, managed, credential_ref, state, note)
-VALUES ('platform.shippinnet', 'docker',
-   (SELECT id FROM shippin_infra.hosts WHERE stable_id='host.us-wi.foundation-01'),
-   NULL, 'shippinnet', true, '/shippin/shippinnet/headscale', 'planned',
-   'WardenNet: our branded Tailscale (Headscale control plane). Overlay that keeps devstations/DevForge reachable independent of the public ingress IP; OPNsense WireGuard is the failsafe.')
-ON CONFLICT (stable_id) DO UPDATE SET note=EXCLUDED.note, network_name=EXCLUDED.network_name, updated_at=now();
-
 DROP TRIGGER IF EXISTS set_updated_at ON shippin_infra.ip_migrations;
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON shippin_infra.ip_migrations
   FOR EACH ROW EXECUTE FUNCTION shippin_core.set_updated_at();

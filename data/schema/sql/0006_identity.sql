@@ -159,24 +159,6 @@ DO $$ BEGIN
     END IF;
 END $$;
 
--- ---------------------------------------------------------------------------
--- seed: hades (operator-locked 2026-06-12) — customer + super_admin
--- ---------------------------------------------------------------------------
-INSERT INTO shippin_core.tenants (slug, name)
-VALUES ('hades', 'Hades')
-ON CONFLICT (slug) DO NOTHING;
-
-INSERT INTO shippin_core.subjects (kind, display_name, email, status, email_verified_at)
-SELECT 'customer', 'Hades', 'jessay@gmail.com', 'active', now()
-WHERE NOT EXISTS (SELECT 1 FROM shippin_core.subjects WHERE email = 'jessay@gmail.com');
-
-INSERT INTO shippin_core.subject_tenant (subject_id, tenant_id, role)
-SELECT s.id, t.id, r.role
-FROM shippin_core.subjects s, shippin_core.tenants t,
-     (VALUES ('customer'), ('super_admin')) AS r(role)
-WHERE s.email = 'jessay@gmail.com' AND t.slug = 'hades'
-ON CONFLICT (subject_id, tenant_id, role) DO NOTHING;
-
 INSERT INTO shippin_core.schema_migrations(version) VALUES ('0006_identity')
   ON CONFLICT (version) DO NOTHING;
 

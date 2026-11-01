@@ -11,7 +11,7 @@ import (
 func TestCustomerRoutesFailClosed(t *testing.T) {
 	router := chi.NewRouter()
 	// A nil store would panic if any route reached its database handler.
-	NewHandler(nil).Routes(router)
+	NewHandler(nil, "shippin_session").Routes(router)
 	for _, path := range []string{
 		"/api/clyffe/home",
 		"/api/clyffe/accounts",

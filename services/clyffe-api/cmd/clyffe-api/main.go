@@ -33,6 +33,9 @@ func main() {
 		log.Fatalf("database: %v", err)
 	}
 	defer pool.Close()
+	if err := platform.ValidateCustomerRole(ctx, pool); err != nil {
+		log.Fatalf("database role: %v", err)
+	}
 	log.Printf("connected to postgres")
 
 	r := chi.NewRouter()
@@ -50,7 +53,7 @@ func main() {
 		platform.JSON(w, http.StatusOK, map[string]any{"status": "ok", "service": "clyffe-api"})
 	})
 
-	account.NewHandler(account.NewStore(pool)).Routes(r)
+	account.NewHandler(account.NewStore(pool), cfg.CookieName).Routes(r)
 
 	srv := &http.Server{
 		Addr:              cfg.Addr,
