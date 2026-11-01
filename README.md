@@ -1,4 +1,22 @@
-﻿# WardenClyffe - Warden Server Manager And Clyffe Customer Portal
+# Shippin Platform
+
+Shippin is being developed as a self-hosted infrastructure and customer panel.
+The first infrastructure target is Incus; Proxmox is a separate provider. The
+React application is under `src/`, and existing Go services are under `services/`.
+
+**Status:** This repository is not yet a verified server release. The current
+API still has authorization and configuration gaps, and primary installation,
+node enrollment, real provider operation, upgrades and recovery need end-to-end
+verification. See the [release roadmap](docs/shippin-platform-roadmap.md) and
+[contribution guide](CONTRIBUTING.md).
+
+The material below is retained as historical project context. Its product names,
+performance claims, topology and installation commands have not been verified as
+the current Shippin platform and must be reviewed before use.
+
+---
+
+# WardenClyffe - Warden Server Manager And Clyffe Customer Portal
 
 <div align="center">
 
