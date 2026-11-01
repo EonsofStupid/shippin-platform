@@ -14,18 +14,29 @@ export function OverviewView() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
+    setHome(null);
     if (token) {
       api
         .workspaces(token)
-        .then((r) => setWorkspaces(r.count))
-        .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+        .then((r) => {
+          if (active) setWorkspaces(r.count);
+        })
+        .catch((e) => {
+          if (active) setError(e instanceof Error ? e.message : String(e));
+        });
+      api
+        .clyffyHome(token)
+        .then((value) => {
+          if (active) setHome(value);
+        })
+        .catch(() => undefined);
     } else {
       setWorkspaces(null);
     }
-    api
-      .clyffyHome()
-      .then(setHome)
-      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
   }, [token]);
 
   const owed = home?.summary.config_items_owed ?? null;

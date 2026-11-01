@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, type ClyffyHome, type FoundationService } from "../../../../lib/api";
 import { Card, Badge } from "../../../../lib/design";
+import { useAuth } from "../../identity";
 
 const ROLE_LABEL: Record<string, string> = {
   sql: "Postgres", vector: "Qdrant", graph: "SurrealDB", identity: "Authentik",
@@ -21,15 +22,32 @@ const DESIGNATION_TONE = {
 } as const;
 
 export function FoundationView() {
+  const { token } = useAuth();
   const [home, setHome] = useState<ClyffyHome | null>(null);
   const [services, setServices] = useState<FoundationService[]>([]);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([api.clyffyHome(), api.clyffyServices()])
-      .then(([h, s]) => { setHome(h); setServices(s.items); })
-      .catch((e) => setErr((e as Error).message));
-  }, []);
+    let active = true;
+    setHome(null);
+    setServices([]);
+    setErr(null);
+    if (token) {
+      Promise.all([api.clyffyHome(token), api.clyffyServices(token)])
+        .then(([h, s]) => {
+          if (active) {
+            setHome(h);
+            setServices(s.items);
+          }
+        })
+        .catch((e) => {
+          if (active) setErr((e as Error).message);
+        });
+    }
+    return () => {
+      active = false;
+    };
+  }, [token]);
 
   return (
     <div>

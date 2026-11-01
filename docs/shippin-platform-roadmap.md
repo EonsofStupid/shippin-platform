@@ -21,6 +21,8 @@ alone do not establish compatibility, security or deployability.
   membership records with a restricted database role. Any membership role can
   currently read its organization's order metadata; finer billing permissions
   and the broader customer identity and enrollment system require release review.
+- Internal assistant inventory and probe routes require the existing operator
+  bearer session. This does not establish a separate AI service identity.
 - Installation-specific network, account and public-IP seeds have been removed
   from fresh migrations 0004, 0006 and 0007. Previously applied data is not
   removed; review existing installations before release.

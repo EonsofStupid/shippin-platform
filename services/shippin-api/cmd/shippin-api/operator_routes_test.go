@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/shippin/shippin-api/internal/automation"
+	"github.com/shippin/shippin-api/internal/clyffy"
 	"github.com/shippin/shippin-api/internal/data"
 	"github.com/shippin/shippin-api/internal/fleet"
 	"github.com/shippin/shippin-api/internal/identity"
@@ -27,6 +28,7 @@ func TestOperatorDataAndFleetRoutes(t *testing.T) {
 	fleet.NewHandler(fleet.NewStore(nil), authorize).Routes(router)
 	automation.NewHandler(automation.NewService(nil, nil, nil), authorize).Routes(router)
 	data.NewHandler(data.NewStore(nil), authorize).Routes(router)
+	clyffy.NewHandler(clyffy.NewStore(nil), authorize).Routes(router)
 	routes := []struct{ method, path string }{
 		{http.MethodGet, "/api/warden/workspaces"},
 		{http.MethodGet, "/api/warden/workspaces/example"},
@@ -36,6 +38,12 @@ func TestOperatorDataAndFleetRoutes(t *testing.T) {
 		{http.MethodGet, "/api/warden/data/tables/shippin_core/tenants"},
 		{http.MethodGet, "/api/warden/data/tables/shippin_core/tenants/rows"},
 		{http.MethodPost, "/api/warden/data/query"},
+		{http.MethodGet, "/api/clyffy/home"},
+		{http.MethodGet, "/api/clyffy/services"},
+		{http.MethodGet, "/api/clyffy/platforms"},
+		{http.MethodGet, "/api/clyffy/intelligence"},
+		{http.MethodGet, "/api/clyffy/plugins"},
+		{http.MethodGet, "/api/clyffy/connectors"},
 	}
 	checkDenied := func(authorization string) {
 		t.Helper()

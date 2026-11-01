@@ -76,7 +76,7 @@ func main() {
 	mesh.NewHandler(mesh.NewStore(cfg.RepoRoot, cfg.SyncPlanPath, cfg.SyncBin), operatorAuthz).Routes(r)
 	edge.NewHandler(edge.NewStore(pool), operatorAuthz).Routes(r)
 	connect.NewHandler(connect.NewStore(cfg.RepoRoot), operatorAuthz).Routes(r)
-	clyffy.NewHandler(clyffy.NewStore(pool)).Routes(r)
+	clyffy.NewHandler(clyffy.NewStore(pool), operatorAuthz).Routes(r)
 	// Slice 0: Proxmox substrate inventory + task-true start/stop.
 	proxmox.NewHandler(proxmox.NewService(proxmox.LoadConfig(), pool, auditSink), operatorAuthz).Routes(r)
 

@@ -153,18 +153,25 @@ export const api = {
       body: JSON.stringify({ sql }),
     }),
 
-  clyffyHome: () => req<ClyffyHome>("/api/clyffy/home"),
-  clyffyServices: () => req<{ items: FoundationService[]; count: number }>("/api/clyffy/services"),
-  clyffyPlugins: () =>
-    req<{ designation: string; audience: string; items: FoundationService[]; count: number }>(
-      "/api/clyffy/plugins",
-    ),
-  clyffyConnectors: () =>
-    req<{ designation: string; audience: string; items: FoundationService[]; count: number }>(
-      "/api/clyffy/connectors",
-    ),
-  clyffyIntelligence: () =>
-    req<{ plane: string; probes: IntelProbe[] }>("/api/clyffy/intelligence"),
+  clyffyHome: (token: string | null) => operatorRequest<ClyffyHome>(token, "/api/clyffy/home"),
+  clyffyServices: (token: string | null) =>
+    operatorRequest<{ items: FoundationService[]; count: number }>(token, "/api/clyffy/services"),
+  clyffyPlugins: (token: string | null) =>
+    operatorRequest<{
+      designation: string;
+      audience: string;
+      items: FoundationService[];
+      count: number;
+    }>(token, "/api/clyffy/plugins"),
+  clyffyConnectors: (token: string | null) =>
+    operatorRequest<{
+      designation: string;
+      audience: string;
+      items: FoundationService[];
+      count: number;
+    }>(token, "/api/clyffy/connectors"),
+  clyffyIntelligence: (token: string | null) =>
+    operatorRequest<{ plane: string; probes: IntelProbe[] }>(token, "/api/clyffy/intelligence"),
 };
 
 export function cell(v: unknown): string {

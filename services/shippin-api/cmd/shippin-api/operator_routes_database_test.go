@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shippin/shippin-api/internal/audit"
 	"github.com/shippin/shippin-api/internal/automation"
+	"github.com/shippin/shippin-api/internal/clyffy"
 	"github.com/shippin/shippin-api/internal/data"
 	"github.com/shippin/shippin-api/internal/fleet"
 	"github.com/shippin/shippin-api/internal/identity"
@@ -32,6 +33,17 @@ func TestOperatorRoutesDatabaseIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer pool.Close()
+	var fixtureID string
+	err = pool.QueryRow(ctx, `INSERT INTO shippin_infra.services (stable_id, name, role, endpoint, credential_ref)
+		VALUES ('test.inventory-service', 'test inventory', 'sql', 'https://inventory.example.invalid', 'test/reference') RETURNING id`).Scan(&fixtureID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if _, err := pool.Exec(ctx, `DELETE FROM shippin_infra.services WHERE id = $1`, fixtureID); err != nil {
+			t.Errorf("remove inventory fixture: %v", err)
+		}
+	}()
 	identities := identity.NewStore("integration-operator", "integration-password")
 	authorize := func(token string) bool { op, ok := identities.Validate(token); return ok && op.Role == "operator" }
 	fleetStore := fleet.NewStore(pool)
@@ -40,6 +52,7 @@ func TestOperatorRoutesDatabaseIntegration(t *testing.T) {
 	fleet.NewHandler(fleetStore, authorize).Routes(router)
 	automation.NewHandler(automation.NewService(pool, fleetStore, audit.New(pool)), authorize).Routes(router)
 	data.NewHandler(data.NewStore(pool), authorize).Routes(router)
+	clyffy.NewHandler(clyffy.NewStore(pool), authorize).Routes(router)
 	server := httptest.NewServer(router)
 	defer server.Close()
 	request := func(method, path, token, body string, want int) []byte {
@@ -66,6 +79,15 @@ func TestOperatorRoutesDatabaseIntegration(t *testing.T) {
 		return result
 	}
 	request(http.MethodPost, "/api/warden/provision", "", `{"tier":"test"}`, http.StatusUnauthorized)
+	inventoryPaths := []string{"/api/clyffy/home", "/api/clyffy/services", "/api/clyffy/platforms", "/api/clyffy/intelligence", "/api/clyffy/plugins", "/api/clyffy/connectors"}
+	for _, path := range inventoryPaths {
+		for _, token := range []string{"", "invalid"} {
+			body := request(http.MethodGet, path, token, "", http.StatusUnauthorized)
+			if bytes.Contains(body, []byte("inventory.example.invalid")) || bytes.Contains(body, []byte("test/reference")) {
+				t.Errorf("%s leaked inventory to an unauthorized request", path)
+			}
+		}
+	}
 	var before int
 	if err := pool.QueryRow(ctx, `SELECT count(*) FROM shippin_infra.resources`).Scan(&before); err != nil {
 		t.Fatal(err)
@@ -79,6 +101,13 @@ func TestOperatorRoutesDatabaseIntegration(t *testing.T) {
 	}
 	if err := json.Unmarshal(login, &session); err != nil || session.Token == "" {
 		t.Fatal("login did not issue a session")
+	}
+	for _, path := range inventoryPaths {
+		request(http.MethodGet, path, session.Token, "", http.StatusOK)
+	}
+	serviceBody := request(http.MethodGet, "/api/clyffy/services", session.Token, "", http.StatusOK)
+	if !bytes.Contains(serviceBody, []byte("inventory.example.invalid")) || !bytes.Contains(serviceBody, []byte("test/reference")) {
+		t.Fatal("operator did not receive the expected inventory fixture")
 	}
 	request(http.MethodGet, "/api/warden/data/schemas", session.Token, "", http.StatusOK)
 	request(http.MethodGet, "/api/warden/data/schemas/shippin_core/tables", session.Token, "", http.StatusOK)
@@ -102,6 +131,9 @@ func TestOperatorRoutesDatabaseIntegration(t *testing.T) {
 		t.Fatalf("resource count = %d, error = %v", count, err)
 	}
 	request(http.MethodPost, "/api/warden/identity/logout", session.Token, "", http.StatusNoContent)
+	for _, path := range inventoryPaths {
+		request(http.MethodGet, path, session.Token, "", http.StatusUnauthorized)
+	}
 	request(http.MethodGet, "/api/warden/workspaces", session.Token, "", http.StatusUnauthorized)
 	request(http.MethodPost, "/api/warden/data/query", session.Token, `{"sql":"SELECT 1"}`, http.StatusUnauthorized)
 }
