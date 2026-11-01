@@ -38,13 +38,6 @@ DROP TRIGGER IF EXISTS set_updated_at ON shippin_infra.public_ips;
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON shippin_infra.public_ips
   FOR EACH ROW EXECUTE FUNCTION shippin_core.set_updated_at();
 
--- Seed the verified homebase ingress IP (PUBLIC_IP_HOMEBASE_FOUNDATION) so the
--- inventory is non-empty on a clean clone. Re-running is a no-op.
-INSERT INTO shippin_infra.public_ips (address, role, status, label, note)
-VALUES ('104.176.44.101'::inet, 'ingress', 'active', 'devstation-egress',
-        'Verified devstation egress / homebase candidate; MI Trusted-IP allowlist target.')
-ON CONFLICT (address) DO NOTHING;
-
 INSERT INTO shippin_core.schema_migrations(version) VALUES ('0007_public_ips')
   ON CONFLICT (version) DO NOTHING;
 

@@ -9,9 +9,13 @@ package account
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -39,12 +43,39 @@ type Order struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-// ListAccounts returns customer accounts (tenants). In production this is
-// scoped to the authenticated customer's tenant; the skeleton lists all so the
-// portal has something to render off the devstation.
-func (s *Store) ListAccounts(ctx context.Context) ([]Account, error) {
+var ErrUnauthenticated = errors.New("unauthenticated")
+var ErrTenantNotFound = errors.New("organization not found")
+
+// SessionSubject resolves the existing shippin-auth cookie without trusting
+// caller-supplied identity headers. Raw tokens are never stored or logged.
+func (s *Store) SessionSubject(ctx context.Context, token string) (string, error) {
+	if len(token) != 64 {
+		return "", ErrUnauthenticated
+	}
+	if _, err := hex.DecodeString(token); err != nil {
+		return "", ErrUnauthenticated
+	}
+	hash := sha256.Sum256([]byte(token))
+	var subject string
+	err := s.db.QueryRow(ctx, `
+		SELECT s.id::text FROM identity.sessions sess
+		JOIN shippin_core.subjects s ON s.id = sess.subject_id
+		WHERE sess.token_hash = $1 AND sess.expires_at > now()
+		  AND s.kind = 'customer' AND s.is_active AND s.status = 'active'
+		  AND s.email_verified_at IS NOT NULL`, hex.EncodeToString(hash[:])).Scan(&subject)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrUnauthenticated
+	}
+	return subject, err
+}
+
+// ListAccounts returns only organizations the verified subject belongs to.
+func (s *Store) ListAccounts(ctx context.Context, subject string) ([]Account, error) {
 	rows, err := s.db.Query(ctx,
-		`SELECT id, slug, name, created_at FROM shippin_core.tenants ORDER BY created_at`)
+		`SELECT t.id, t.slug, t.name, t.created_at FROM shippin_core.tenants t
+		 WHERE EXISTS (SELECT 1 FROM shippin_core.subject_tenant m
+		               WHERE m.tenant_id = t.id AND m.subject_id = $1::uuid)
+		 ORDER BY t.created_at, t.id`, subject)
 	if err != nil {
 		return nil, err
 	}
@@ -60,19 +91,35 @@ func (s *Store) ListAccounts(ctx context.Context) ([]Account, error) {
 	return out, rows.Err()
 }
 
-// ListOrders returns the customer's orders. tenantID == "" lists all (skeleton
-// convenience); a non-empty value scopes to one tenant, as production will.
-func (s *Store) ListOrders(ctx context.Context, tenantID string) ([]Order, error) {
-	const cols = `id, tenant_id, product, tier, repo, region, status::text, created_at`
-	var rows pgx.Rows
-	var err error
-	if tenantID == "" {
-		rows, err = s.db.Query(ctx,
-			`SELECT `+cols+` FROM clyffe_core.orders ORDER BY created_at DESC`)
-	} else {
-		rows, err = s.db.Query(ctx,
-			`SELECT `+cols+` FROM clyffe_core.orders WHERE tenant_id = $1 ORDER BY created_at DESC`, tenantID)
+// ListOrders checks membership before setting an RLS context local to this
+// read-only transaction. No pooled connection retains a customer's context.
+func (s *Store) ListOrders(ctx context.Context, subject, tenantID string) ([]Order, error) {
+	var tenant pgtype.UUID
+	if err := tenant.Scan(tenantID); err != nil || !tenant.Valid {
+		return nil, ErrTenantNotFound
 	}
+	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{AccessMode: pgx.ReadOnly})
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+	var member bool
+	err = tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM shippin_core.subject_tenant
+		WHERE subject_id = $1::uuid AND tenant_id = $2::uuid)`, subject, tenant).Scan(&member)
+	if err != nil {
+		return nil, err
+	}
+	if !member {
+		return nil, ErrTenantNotFound
+	}
+	if _, err = tx.Exec(ctx, `SELECT set_config('app.current_tenant', $1, true)`, tenantID); err != nil {
+		return nil, err
+	}
+	rows, err := tx.Query(ctx, `SELECT o.id, o.tenant_id, o.product, o.tier, o.repo, o.region,
+		o.status::text, o.created_at FROM clyffe_core.orders o
+		WHERE o.tenant_id = $1::uuid AND EXISTS (SELECT 1 FROM shippin_core.subject_tenant m
+		  WHERE m.tenant_id = o.tenant_id AND m.subject_id = $2::uuid)
+		ORDER BY o.created_at DESC, o.id`, tenant, subject)
 	if err != nil {
 		return nil, err
 	}
@@ -85,5 +132,12 @@ func (s *Store) ListOrders(ctx context.Context, tenantID string) ([]Order, error
 		}
 		out = append(out, o)
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	rows.Close()
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return out, nil
 }

@@ -25,4 +25,6 @@ Ordered decision items. State ∈ open|locked|parked; `rounds` capped at 12. Man
 
 <!-- agenda:start -->
 - [1] locked rounds=1 || q=Deny customer account endpoints until verified identity and tenant scoped access exist || boundary=services/clyffe-api/internal/account
+- [2] locked rounds=1 || q=Reuse verified sessions and scope account and order reads to membership || boundary=services/clyffe-api/internal/account
+- [3] locked rounds=1 || q=Require a restricted non-owner customer database role || boundary=services/clyffe-api/internal/account
 <!-- agenda:end -->

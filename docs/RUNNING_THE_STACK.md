@@ -1,5 +1,44 @@
 # Running the WardenClyffe stack (devstation)
 
+> **Development reference, not a release installer.** Some historical names and
+> paths below predate the Shippin migration. The customer API now requires a
+> dedicated restricted PostgreSQL login; it will not use the operator DB URL.
+
+Apply the migrations through `0009_customer_access.sql` on PostgreSQL 18 as an
+appropriately privileged migration owner. Migration 0009 creates the non-login
+`shippin_customer_api` group role and grants only the columns used by the
+customer account API. Provision a separate login using your installation's
+secret-management process, grant that login the group role, and set
+`CLYFFE_DB_URL` to its connection string. The login must not own the tables, be
+a superuser, bypass row security, create roles/databases, replicate, or inherit
+other roles. The API rejects unsafe role configuration at startup.
+
+For example, a database administrator can create the login and assign a password
+interactively in `psql`; use a different login name if your installation needs
+one. The password is not part of the migration or repository:
+
+```sql
+CREATE ROLE shippin_customer_login LOGIN;
+GRANT shippin_customer_api TO shippin_customer_login;
+\password shippin_customer_login
+```
+
+The customer API reads the `SHIPPIN_AUTH_COOKIE` cookie name used by
+`shippin-auth` (default `shippin_session`). Serve both through a deliberately
+configured same-origin HTTPS gateway; the current development CORS middleware
+does not implement cross-origin credentialed sessions. Account and order routes
+require an active verified customer session. `/api/clyffe/orders` requires a
+`tenant_id` belonging to that subject. At present any membership role can read
+that organization's order metadata; granular billing permissions are not yet
+implemented. The existing `shippin-auth` login and other API routes still require
+production security review.
+
+Migration 0009 revokes default PUBLIC execution of identity functions. Any
+separate identity-service database login must receive explicit EXECUTE grants
+for the functions it uses; existing data and memberships are not removed. The
+installation-specific network, account and IP seeds were removed from fresh
+migrations 0004, 0006 and 0007; previously applied data is left untouched.
+
 This is the live foundation: **Warden server (Go) + Clyffe portal API (Go) +
 self-hosted Postgres + React console** with a Supabase-inspired, Go-backed data
 management layer. Warden is the operator plane; Clyffe is the customer plane.
@@ -51,7 +90,7 @@ Clyffe-api surface (customer plane):
 | GET | `/healthz` | liveness + db ping |
 | GET | `/api/clyffe/home` | portal overview: accounts + order roll-up |
 | GET | `/api/clyffe/accounts` | customer accounts (tenants) |
-| GET | `/api/clyffe/orders?tenant_id=` | customer orders (all, or one tenant) |
+| GET | `/api/clyffe/orders?tenant_id=` | orders for one authorized tenant |
 
 ## View it from your machine
 
