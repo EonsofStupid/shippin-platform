@@ -22,7 +22,7 @@ jobs:
       - name: build, vet, test every workspace module
         run: |
           set -euo pipefail
-          for m in services/clyffe-api services/storage-broker-client services/warden-api services/cortex-mcp services/intelligence-sync; do
+          for m in services/clyffe-api services/storage-broker-client services/shippin-api services/shippin-auth services/cortex-mcp services/intelligence-sync; do
             echo "=== $m ==="
             ( cd "$m" && go build ./... && go vet ./... && go test ./... )
           done
@@ -36,8 +36,11 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: package-lock.json
-      - run: npm ci --no-audit --no-fund
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run check:quality
       - run: npm run build
+      - run: npm run typecheck
+      - run: npm test
 
   touchpoints:
     runs-on: ubuntu-latest

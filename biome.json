@@ -1,0 +1,14 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.4/schema.json",
+  "files": {
+    "includes": [
+      "src/domains/warden/proxmox/proxmox.schema.ts",
+      "src/domains/warden/proxmox/proxmox.svc.ts",
+      "src/domains/warden/proxmox/proxmox.svc.test.mjs",
+      "src/domains/warden/proxmox/types.ts"
+    ]
+  },
+  "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
+  "javascript": { "formatter": { "quoteStyle": "double", "semicolons": "always" } },
+  "linter": { "enabled": true, "rules": { "preset": "recommended" } }
+}

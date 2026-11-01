@@ -1,9 +1,9 @@
 {
-  "name": "@shippin-mesh/web",
+  "name": "@shippin/platform",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "WardenClyffe web \u2014 TanStack Start + React + ColdLight (OKLCH/rem). Root src/domains app.",
+  "description": "Shippin infrastructure management panel",
   "workspaces": [
     "packages/*"
   ],
@@ -13,25 +13,32 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173",
     "build": "vite build",
+    "check:quality": "biome check src/domains/warden/proxmox",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test src/domains/warden/proxmox/proxmox.svc.test.mjs",
     "preview": "vite preview --host 127.0.0.1 --port 5173",
     "setup": "bash scripts/dev/setup-prerelease.sh",
     "stack": "bash scripts/dev/run-stack.sh",
     "stop": "bash scripts/dev/stop-stack.sh",
-    "verify:slice0": "bash scripts/dev/verify-slice0.sh"
+    "verify:slice0": "bash scripts/dev/verify-slice0.sh",
+    "hooks:install": "lefthook install"
   },
   "dependencies": {
-    "@tanstack/react-router": "^1.170.15",
-    "@tanstack/react-start": "^1.168.25",
+    "@tanstack/react-router": "1.170.46",
+    "@tanstack/react-start": "1.169.4",
     "react": "^18.3.1",
     "react-aria-components": "^1.5.0",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
-    "@tanstack/router-plugin": "^1.168.18",
+    "@biomejs/biome": "2.6.4",
+    "@tanstack/router-plugin": "1.168.48",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^5.1.4",
+    "@vitejs/plugin-react": "6.1.2",
+    "lefthook": "2.2.2",
     "typescript": "^5.6.3",
-    "vite": "^7.3.0"
+    "vite": "8.3.5"
   }
 }
