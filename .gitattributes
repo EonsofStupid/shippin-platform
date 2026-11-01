@@ -1,3 +1,6 @@
 *.sh text eol=lf
 src/domains/warden/proxmox/*.ts text eol=lf
 src/domains/warden/proxmox/*.mjs text eol=lf
+# Conversation mirrors are private data, not reviewable source files.
+.codewarden/conversation_codewardenclyffe.json -diff linguist-generated
+.codewardenclyffe/conversation_codewardenclyffe.json -diff linguist-generated
