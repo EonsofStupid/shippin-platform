@@ -19,8 +19,6 @@ export SHIPPIN_API_ADDR="${SHIPPIN_API_ADDR:-:8081}"
 : "${CLYFFE_DB_URL:?Set CLYFFE_DB_URL to a restricted customer API database login; see docs/RUNNING_THE_STACK.md}"
 export CLYFFE_DB_URL
 export CLYFFE_API_ADDR="${CLYFFE_API_ADDR:-:8082}"
-export SHIPPIN_OPERATOR_USER="${SHIPPIN_OPERATOR_USER:-operator}"
-export SHIPPIN_OPERATOR_PASS="${SHIPPIN_OPERATOR_PASS:-warden-dev}"
 
 # Load proxmox env into process without echoing
 if [ -f "$ROOT/secrets/proxmox.env" ]; then
@@ -32,6 +30,10 @@ if [ -f "$ROOT/secrets/proxmox.env" ]; then
 else
   echo "[dev] WARN: no secrets/proxmox.env — Slice 0 inventory will be unconfigured"
 fi
+
+: "${SHIPPIN_OPERATOR_USER:?Set SHIPPIN_OPERATOR_USER to your chosen development operator name}"
+: "${SHIPPIN_OPERATOR_PASS:?Set SHIPPIN_OPERATOR_PASS to your chosen development operator password}"
+export SHIPPIN_OPERATOR_USER SHIPPIN_OPERATOR_PASS
 
 echo "[dev] building shippin-api..."
 ( cd "$ROOT/services/shippin-api" && go build -o "$PIDDIR/shippin-api" ./cmd/shippin-api )
@@ -73,7 +75,7 @@ echo
 
 echo "[dev] starting console on :5173 ..."
 echo "[dev] Slice 0 UI: http://127.0.0.1:5173/admin/proxmox (after login)"
-echo "[dev] Login: operator / warden-dev   STATE: docs/STATE.md"
+echo "[dev] Sign in with your configured operator credentials."
 cd "$ROOT"
 [ -d node_modules ] || npm install --no-audit --no-fund
 exec npm run dev

@@ -4,6 +4,12 @@
 > paths below predate the Shippin migration. The customer API now requires a
 > dedicated restricted PostgreSQL login; it will not use the operator DB URL.
 
+The operator API requires explicitly configured `SHIPPIN_OPERATOR_USER` and
+`SHIPPIN_OPERATOR_PASS` environment variables. Use installation-specific
+credentials and supply them through your secret-management process; there is no
+default operator login. This development bootstrap is not a production
+first-owner enrollment or a complete password policy.
+
 Apply the migrations through `0009_customer_access.sql` on PostgreSQL 18 as an
 appropriately privileged migration owner. Migration 0009 creates the non-login
 `shippin_customer_api` group role and grants only the columns used by the

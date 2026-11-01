@@ -23,6 +23,8 @@ alone do not establish compatibility, security or deployability.
   and the broader customer identity and enrollment system require release review.
 - Internal assistant inventory and probe routes require the existing operator
   bearer session. This does not establish a separate AI service identity.
+- The development operator API requires an explicitly configured username and
+  password; first-owner enrollment and production identity remain unfinished.
 - Installation-specific network, account and public-IP seeds have been removed
   from fresh migrations 0004, 0006 and 0007. Previously applied data is not
   removed; review existing installations before release.

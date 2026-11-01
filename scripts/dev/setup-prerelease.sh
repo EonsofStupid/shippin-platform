@@ -69,9 +69,9 @@ echo "  /tmp/shippin-api /tmp/clyffe-api"
 echo
 echo "Next:"
 echo "  1. Edit secrets/proxmox.env with a real Proxmox API token"
-echo "  2. make stack          # start APIs + console"
-echo "  3. make verify-slice0  # health + proxmox status"
-echo "  4. Login UI: http://127.0.0.1:5173/login  (operator / warden-dev)"
+echo "  2. Configure SHIPPIN_OPERATOR_USER, SHIPPIN_OPERATOR_PASS, and CLYFFE_DB_URL"
+echo "  3. make stack          # start APIs + console"
+echo "  4. make verify-slice0  # health + proxmox status"
 echo "  5. Slice 0:  http://127.0.0.1:5173/admin/proxmox"
 echo
 echo "Read docs/STATE.md for living pre-release status."

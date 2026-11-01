@@ -30,6 +30,9 @@ import (
 
 func main() {
 	cfg := platform.LoadConfig()
+	if err := cfg.ValidateOperatorCredentials(); err != nil {
+		log.Fatalf("configuration: %v", err)
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
