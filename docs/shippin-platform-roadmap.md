@@ -11,9 +11,9 @@ alone do not establish compatibility, security or deployability.
 - `src/` contains the React/TanStack application; `services/` contains Go
   services. The Proxmox API routes require an operator bearer session and its
   client requires verified TLS, with an optional private CA.
-- Lefthook and Biome currently cover the reviewed Proxmox frontend files only.
-  Zod validates that feature's existing API responses; it is not a replacement
-  for a provider-neutral server contract.
+- Lefthook and Biome cover a limited, reviewed set of frontend files, including
+  Proxmox and staff data/fleet callers. Zod validates the Proxmox feature's
+  existing API responses; it is not a provider-neutral server contract.
 - The existing API still exposes other routes without a complete authorization
   model. Development configuration includes shared defaults. The current
   application is not ready to expose on a server or offer as a release.
@@ -72,7 +72,11 @@ control-plane view of capacity, lifecycle, configuration and service health.
 These are product goals, not a list of services already implemented.
 
 Every tier must provide a baseline of at least two instances and a 3 GB storage
-allowance. **Policy decisions remain open:** what constitutes an instance, whether
+allowance. The owner requested a **configurable default of five**, with the
+association configurable and a project as its default. It remains unclear whether
+five means instances or GB; do not implement that value until clarified. This is
+product direction, not an implemented limit. **Policy decisions remain open:**
+what constitutes an instance, who may change each limit or association, whether
 the allowance belongs to an organization, workspace or user, whether 3 GB applies
 per instance or is shared, and whether it covers database storage, buckets or
 both. Resolve these before publishing a price, writing entitlement defaults or
@@ -128,3 +132,83 @@ again at each step:
    failed jobs, restart recovery, backup/restore and upgrades. Include operator
    and customer authorization denials. Record actual artifacts and versions;
    mocked providers and green unit tests alone do not establish release readiness.
+
+### Guided connections for external applications
+
+**Planned; no connection endpoint, network-policy reconciler, customer guide or
+provider integration is implemented yet.** After an authorized customer creates
+an instance, its project should offer a **Connect an application** flow for
+Lovable, Replit, Bolt and a generic client. Show the selected organization,
+workspace, project, environment and instance before changing access. Let users
+change the association only where their role and the owning resources permit it;
+the server must validate every relationship. Show actual service readiness and
+explain when a step is unavailable, rather than presenting placeholders as live.
+
+Provide these routes only as their underlying services become available:
+
+| Connection path | Intended guide | Evidence and limits |
+| --- | --- | --- |
+| Server-side PostgreSQL | Give an authorized user an instance-scoped connection endpoint and a separately managed credential for a server or serverless function. Guide Replit users to project and published-app secrets, as applicable; support Prisma, Drizzle and ordinary drivers when verified. A browser-only app needs a backend or API. | Replit documents [secrets](https://docs.replit.com/core-concepts/project-editor/app-setup/secrets) for connection strings and separate published-app settings. Do not overwrite an existing `DATABASE_URL` or infer that a provider's built-in database dashboard will manage an external database. |
+| HTTPS project API | Where Shippin implements a tenant-safe HTTPS application API, explain how to use it from a frontend or server and how authentication, permissions and CORS differ. Guide Lovable users through a supported custom connector or direct API integration. | Lovable documents [API integrations](https://docs.lovable.dev/integrations/any-api) and [custom connectors](https://docs.lovable.dev/integrations/create-connector). These require a reachable API; they do not make a bare PostgreSQL database an HTTP API. |
+| Bolt | Offer the generic HTTPS or server-side path when the particular app runtime supports it; provide exact instructions only after testing an actual Bolt project. | Bolt documents a [Supabase-specific integration](https://support.bolt.new/bolt-cloud/database/advanced). PostgreSQL compatibility alone does not establish that Shippin works with that native integration, which has its own plan and migration requirements. |
+| Private network | Offer private networking or a supported tunnel when the application environment can use it. Explain the connection requirements and limitations. | Availability depends on the installation, host adapter and external runtime; do not assume Lovable's public API connector can reach a private-only endpoint. |
+
+**Access and firewall ownership:** start with no external database access. The
+installation operator configures available network capabilities; an authorized
+customer requests the access mode and allowed source networks for their own
+instance. The control plane owns policy intent and audit records; a trusted host
+agent/provider adapter applies and reconciles only the rules it owns. Report
+pending, applied, failed and stale observations separately. Rules must not flush
+or overwrite unrelated host, cluster or customer firewall rules. Define IPv4,
+IPv6, NAT, DNS, port and provider support explicitly. Use the specific published
+source ranges only for the traffic path to which a provider says they apply;
+do not bake them into code or assume a runtime has a stable address. Lovable
+documents [gateway connector ranges](https://docs.lovable.dev/integrations/security#ip-allowlisting),
+which do not automatically describe other Lovable traffic. When a provider has
+no suitable fixed range, explain supported alternatives such as an authenticated
+HTTPS API or private tunnel; never silently broaden a firewall rule.
+
+For Incus, choose the enforcement point from the actual network topology. Its
+[bridge ACL limitations](https://linuxcontainers.org/incus/docs/main/howto/network_acls/#bridge-limitations)
+mean a network-level bridge ACL alone does not provide intra-bridge isolation;
+NIC-level ACLs and OVN have different behavior. A
+[proxy device](https://linuxcontainers.org/incus/docs/main/reference/devices_proxy/)
+can also change which client address the database sees, depending on its mode.
+Test source restrictions at the point that sees the real source, including the
+edge and any NAT. The older console's candidate host firewall code uses an
+IPv4-only edge and workspace-tagged ACL rules; review its partial-apply and
+recovery behavior before adopting it for tenant databases or IPv6.
+
+**Credentials and transport:** issue per-instance, least-privilege, revocable
+credentials with separate application and migration permissions; do not expose a
+database password or privileged service key in frontend code, chat prompts,
+repositories, logs, analytics or error messages. Show a secret only to an
+authorized user when needed and provide rotation and revocation. Require encrypted
+connections, with server certificate and hostname verification supported by the
+selected client; document private CA distribution when applicable. PostgreSQL's
+[`hostssl` rules](https://www.postgresql.org/docs/current/auth-pg-hba-conf.html)
+and [client TLS verification](https://www.postgresql.org/docs/current/libpq-ssl.html)
+are separate from host firewall rules. A browser-safe API key is not a database
+credential and is safe to publish only when the API actually enforces end-user
+authorization and data isolation.
+
+**Implementation and release gates:**
+
+1. Establish the customer identity, project/instance ownership and entitlements
+   in the preceding steps. Define one versioned server contract for access grants,
+   endpoint readiness and connection policies before adding UI schemas or routes.
+2. Implement instance-scoped credentials, TLS, network policy reconciliation and
+   audited lifecycle actions using the Incus host agent first; add a separate
+   Proxmox adapter later. A failed policy update must not be reported as active.
+3. Build the guided flow against real authorized APIs, with provider-specific
+   instructions, masked secrets, source-network entry and clear error states.
+   Distinguish a successful probe from Shippin from a successful connection made
+   by the external application. Diagnostic endpoints must not accept arbitrary
+   customer-supplied target URLs or expose internal network services.
+4. On disposable infrastructure, verify allowed and denied IPv4/IPv6 paths,
+   private and public modes, TLS hostname failures, credential rotation and
+   revocation, cross-tenant denial, concurrent policy changes, agent restart,
+   failed apply and rollback without disturbing unrelated rules. Test real
+   development and published applications separately. Record the provider,
+   runtime, date and supported features for each actual Lovable, Replit and Bolt
+   test; label any untested path unavailable or experimental.
