@@ -19,12 +19,14 @@ clyffy_touchpoint:
 # Build Spec — docs-shippin-platform-roadmap-md
 
 Focus: **Shippin managed database projects**. Boundary: `docs/shippin-platform-roadmap.md`. Emitted 2026-11-01 from agenda
-`docs/ai/parking-lot/agenda/docs-shippin-platform-roadmap-md.md` (2 locked, 1 parked).
+`docs/ai/parking-lot/agenda/docs-shippin-platform-roadmap-md.md` (3 locked, 2 parked).
 Contract: `docs/ai/WARDENCLYFFE_PARKING_LOT_SKILL.md` §Build Spec Contract.
 
 ## 1. Overview
 Protect the existing operator data browser, fleet and provisioning routes and
 record the path to managed application/database projects in the release roadmap.
+The roadmap also records guided external connections and the owner-requested
+configurable default of five with project-first association; the unit is pending.
 
 **Non-goals:** A customer tenant API, an implemented managed database service,
 production identity, quotas, host operations, GitHub provisioning and deployment.
@@ -43,27 +45,40 @@ source and will be migrated deliberately under the user's Shippin direction.
 - **[feature] operator route protection**: Existing data, fleet and provision
   endpoints require an operator session. A separate, tenant-aware interface is
   needed for customer resources. Leaving them public would expose platform data.
+- **[feature] guided external application connections**: Plan distinct
+  server-side PostgreSQL, HTTPS API and private networking paths, with scoped
+  policies and provider-specific verification.
+- **[feature] configurable association**: The owner requests configurable
+  association defaulting to a project, and a configurable default of five. Whether
+  five counts instances or GB, who can change the limit and the 3 GB allocation
+  remain unresolved.
 
 Agenda items locked:
 - **D1** (`services/shippin-api`): Protect existing operator data, fleet and provisioning endpoints and preserve authenticated UI access
 - **D2** (`docs/shippin-platform-roadmap.md`): Record managed-project lifecycle, ownership and verifiable delivery milestones
+- **D4** (`docs/shippin-platform-roadmap.md`): Define guided provider connectivity, access policy and real-world verification
 
 ## 4. Minimal requirements (10x foresight)
 Per item: the smallest thing that ships *complete*, plus what to configure now
 because it is 10x costlier to retrofit.
 - **D1** (`services/shippin-api`): Protect existing operator data, fleet and provisioning endpoints and preserve authenticated UI access
 - **D2** (`docs/shippin-platform-roadmap.md`): Record managed-project lifecycle, ownership and verifiable delivery milestones
+- **D4** (`docs/shippin-platform-roadmap.md`): Define guided provider connectivity, access policy and real-world verification
 
 The server must validate every listed route, not rely on React navigation. The
 existing UI must send the existing session and report errors. Future work must
 keep tenant resources, database credentials, quota reservations and customer
 data scoped to their verified owner and prevent cross-tenant access.
+External connectivity must not be marked ready until the instance, credentials,
+network policy, client path and provider-specific behavior are actually tested.
 
 ## 5. Established patterns / formulas
 `handler -> RequireOperator -> domain operation` for these legacy staff routes;
 `identity session -> authenticated client -> handler` for existing views.
 Future customer actions require their own verified tenant and object permission;
 an operator bearer is not customer authorization.
+Connection policy intent belongs to the control plane; host/provider adapters
+apply only their own network rules and report observed state.
 
 ## 6. File-creation guidance (notes vs. code)
 Which deliverables are **touchpoints/Markdown** (routing, decisions, runbooks)
@@ -95,6 +110,10 @@ use a disposable Postgres instance to verify actual login, data queries,
 provision request, fleet reads and logout. Verify the frontend sends the token
 and rejects a missing token; run build and typecheck. The roadmap lists further
 end-to-end checks, which remain outstanding until real services exist.
+For D4, inspect the roadmap's provider research and check the desired association
+and outstanding decisions. Real firewall, external-provider and
+entitlement tests remain outstanding; a document is not implementation proof.
 
 ## Parked / deferred
 - **D3** (`docs/shippin-platform-roadmap.md`): Determine two-instance and three-GB allowance scope — _parked: Awaiting owner decisions on allowance scope and storage allocation._
+- **D5** (`docs/shippin-platform-roadmap.md`): Clarify whether the configurable default of five means instances or GB; project is the requested default association.

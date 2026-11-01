@@ -27,4 +27,6 @@ Ordered decision items. State ∈ open|locked|parked; `rounds` capped at 12. Man
 - [1] locked rounds=1 || q=Protect existing operator data, fleet and provisioning endpoints and preserve authenticated UI access || boundary=services/shippin-api
 - [2] locked rounds=1 || q=Record managed-project lifecycle, ownership and verifiable delivery milestones || boundary=docs/shippin-platform-roadmap.md
 - [3] parked rounds=0 || q=Determine two-instance and three-GB allowance scope || boundary=docs/shippin-platform-roadmap.md || reason=Awaiting owner decisions on allowance scope and storage allocation.
+- [4] locked rounds=1 || q=Define guided provider connectivity, access policy and real-world verification || boundary=docs/shippin-platform-roadmap.md
+- [5] parked rounds=1 || q=Record the configurable five-instance default and project-first association || boundary=docs/shippin-platform-roadmap.md || reason=The user said five but did not specify whether it counts instances or GB; awaiting clarification.
 <!-- agenda:end -->
