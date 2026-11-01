@@ -5,9 +5,11 @@ package proxmox
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -25,6 +27,7 @@ type Config struct {
 	TokenID   string // user@realm!tokenid
 	TokenSec  string
 	VerifyTLS bool
+	CAFile    string
 }
 
 // LoadConfig reads PROXMOX_* env vars. Also loads a dotenv-style file if set:
@@ -34,22 +37,25 @@ func LoadConfig() Config {
 	loadProxmoxEnvFile()
 	port := 8006
 	if p := os.Getenv("PROXMOX_PORT"); p != "" {
-		if n, err := strconv.Atoi(p); err == nil {
+		n, err := strconv.Atoi(p)
+		if err != nil {
+			port = 0
+		} else {
 			port = n
 		}
 	}
-	verify := false
-	switch strings.ToLower(os.Getenv("PROXMOX_VERIFY_TLS")) {
-	case "1", "true", "yes":
-		verify = true
+	verify := true
+	if setting := strings.ToLower(strings.TrimSpace(os.Getenv("PROXMOX_VERIFY_TLS"))); setting != "" {
+		verify = setting == "1" || setting == "true" || setting == "yes"
 	}
 	return Config{
-		Host:      env("PROXMOX_HOST", "10.0.0.1"),
+		Host:      os.Getenv("PROXMOX_HOST"),
 		Port:      port,
-		Node:      env("PROXMOX_NODE", "server1"),
+		Node:      os.Getenv("PROXMOX_NODE"),
 		TokenID:   os.Getenv("PROXMOX_TOKEN_ID"),
 		TokenSec:  os.Getenv("PROXMOX_TOKEN_SECRET"),
 		VerifyTLS: verify,
+		CAFile:    os.Getenv("PROXMOX_CA_CERT"),
 	}
 }
 
@@ -59,10 +65,9 @@ func loadProxmoxEnvFile() {
 		candidates = append(candidates, p)
 	}
 	root := os.Getenv("SHIPPIN_REPO_ROOT")
-	if root == "" {
-		root = "/workspace/WardenClyffe-latest"
+	if root != "" {
+		candidates = append(candidates, root+"/secrets/proxmox.env")
 	}
-	candidates = append(candidates, root+"/secrets/proxmox.env")
 	for _, path := range candidates {
 		b, err := os.ReadFile(path)
 		if err != nil {
@@ -88,13 +93,6 @@ func loadProxmoxEnvFile() {
 	}
 }
 
-func env(k, def string) string {
-	if v := os.Getenv(k); v != "" {
-		return v
-	}
-	return def
-}
-
 // Configured reports whether credentials are present (not whether API works).
 func (c Config) Configured() bool {
 	return c.Host != "" && c.TokenID != "" && c.TokenSec != ""
@@ -102,22 +100,43 @@ func (c Config) Configured() bool {
 
 // Client talks to Proxmox REST API.
 type Client struct {
-	cfg    Config
-	http   *http.Client
-	base   string
-	auth   string
+	cfg  Config
+	http *http.Client
+	base string
+	auth string
 }
 
-func NewClient(cfg Config) *Client {
+func NewClient(cfg Config) (*Client, error) {
+	if !cfg.VerifyTLS {
+		return nil, fmt.Errorf("proxmox: TLS verification must be enabled; configure PROXMOX_CA_CERT for a private CA")
+	}
+	if cfg.Host == "" || strings.ContainsAny(cfg.Host, "/\\?#@ \t\r\n") ||
+		(strings.Contains(cfg.Host, ":") && net.ParseIP(cfg.Host) == nil) || cfg.Port < 1 || cfg.Port > 65535 {
+		return nil, fmt.Errorf("proxmox: invalid host or port")
+	}
+	var roots *x509.CertPool
+	if cfg.CAFile != "" {
+		pem, err := os.ReadFile(cfg.CAFile)
+		if err != nil {
+			return nil, fmt.Errorf("proxmox: cannot read CA certificate: %w", err)
+		}
+		roots, err = x509.SystemCertPool()
+		if err != nil || roots == nil {
+			roots = x509.NewCertPool()
+		}
+		if !roots.AppendCertsFromPEM(pem) {
+			return nil, fmt.Errorf("proxmox: CA certificate file contains no valid certificates")
+		}
+	}
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: !cfg.VerifyTLS}, //nolint:gosec // operator-controlled lab default
+		TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12, RootCAs: roots},
 	}
 	return &Client{
 		cfg:  cfg,
 		http: &http.Client{Timeout: 30 * time.Second, Transport: tr},
-		base: fmt.Sprintf("https://%s:%d/api2/json", cfg.Host, cfg.Port),
+		base: "https://" + net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.Port)) + "/api2/json",
 		auth: fmt.Sprintf("PVEAPIToken=%s=%s", cfg.TokenID, cfg.TokenSec),
-	}
+	}, nil
 }
 
 func (c *Client) get(ctx context.Context, path string, out any) error {
@@ -199,7 +218,7 @@ func (c *Client) Version(ctx context.Context) (map[string]any, error) {
 
 // NodeStatus is a subset of node status fields.
 type NodeStatus struct {
-	Node string  `json:"node"`
+	Node string `json:"node"`
 	// CPU/mem from resources listing when available
 }
 
@@ -305,11 +324,11 @@ func (c *Client) StopGuest(ctx context.Context, node, kind string, vmid int) (st
 
 // TaskStatus is a Proxmox task (UPID) status.
 type TaskStatus struct {
-	Status    string `json:"status"`    // running | stopped
+	Status     string `json:"status"` // running | stopped
 	ExitStatus string `json:"exitstatus,omitempty"`
-	UPID      string `json:"upid,omitempty"`
-	Type      string `json:"type,omitempty"`
-	User      string `json:"user,omitempty"`
+	UPID       string `json:"upid,omitempty"`
+	Type       string `json:"type,omitempty"`
+	User       string `json:"user,omitempty"`
 }
 
 // WaitTask polls task until not running or timeout.

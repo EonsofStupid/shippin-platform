@@ -13,18 +13,20 @@ import (
 
 // Service owns inventory + task-true guest actions (control plane).
 type Service struct {
-	cfg   Config
-	cli   *Client
-	db    *pgxpool.Pool
-	audit *audit.Sink
+	cfg     Config
+	cli     *Client
+	db      *pgxpool.Pool
+	audit   *audit.Sink
+	initErr error
 }
 
 func NewService(cfg Config, db *pgxpool.Pool, au *audit.Sink) *Service {
 	var cli *Client
+	var initErr error
 	if cfg.Configured() {
-		cli = NewClient(cfg)
+		cli, initErr = NewClient(cfg)
 	}
-	return &Service{cfg: cfg, cli: cli, db: db, audit: au}
+	return &Service{cfg: cfg, cli: cli, db: db, audit: au, initErr: initErr}
 }
 
 // Status is operator-facing connectivity/config state (no secrets).
@@ -47,7 +49,12 @@ func (s *Service) Status(ctx context.Context) Status {
 		Node:       s.cfg.Node,
 	}
 	if !st.Configured {
-		st.Message = "Proxmox credentials missing. Set PROXMOX_TOKEN_ID and PROXMOX_TOKEN_SECRET (see secrets/proxmox.env.example)."
+		st.Message = "Configure the Proxmox host and API token (see secrets/proxmox.env.example)."
+		return st
+	}
+	if s.initErr != nil {
+		st.Error = s.initErr.Error()
+		st.Message = "Proxmox configuration is invalid."
 		return st
 	}
 	ver, err := s.cli.Version(ctx)
@@ -63,6 +70,9 @@ func (s *Service) Status(ctx context.Context) Status {
 }
 
 func (s *Service) requireClient() error {
+	if s.initErr != nil {
+		return s.initErr
+	}
 	if s.cli == nil || !s.cfg.Configured() {
 		return fmt.Errorf("proxmox not configured")
 	}
@@ -92,11 +102,17 @@ type ActionResult struct {
 
 // StartGuest runs task-true start.
 func (s *Service) StartGuest(ctx context.Context, node, guestKind string, vmid int) (*ActionResult, error) {
+	if err := s.requireClient(); err != nil {
+		return nil, err
+	}
 	return s.runGuestAction(ctx, "guest_start", node, guestKind, vmid, s.cli.StartGuest)
 }
 
 // StopGuest runs task-true stop.
 func (s *Service) StopGuest(ctx context.Context, node, guestKind string, vmid int) (*ActionResult, error) {
+	if err := s.requireClient(); err != nil {
+		return nil, err
+	}
 	return s.runGuestAction(ctx, "guest_stop", node, guestKind, vmid, s.cli.StopGuest)
 }
 
