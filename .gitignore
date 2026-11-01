@@ -71,3 +71,9 @@ src/routeTree.gen.ts
 
 # built service binaries
 services/shippin-auth/shippin-auth
+
+# Local AI conversation mirrors can contain private messages and credentials.
+.ai/data/
+.chat/
+.codewarden/conversation_codewardenclyffe.json
+.codewardenclyffe/conversation_codewardenclyffe.json
