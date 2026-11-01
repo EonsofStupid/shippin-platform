@@ -1,28 +1,48 @@
-import type { GuestActionResult, ProxmoxGuest, ProxmoxStatus } from "./types";
+import { z } from "zod";
+import { guestActionSchema, proxmoxGuestsSchema, proxmoxStatusSchema } from "./proxmox.schema.ts";
 
-async function req<T>(path: string, init?: RequestInit): Promise<T> {
+async function req<T>(path: string, schema: z.ZodType<T>, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     headers: { "Content-Type": "application/json" },
     ...init,
   });
-  const text = await res.text();
-  const body = text ? JSON.parse(text) : null;
-  if (!res.ok) {
-    const msg = body?.error?.message ?? body?.error ?? res.statusText;
-    throw new Error(typeof msg === "string" ? msg : res.statusText);
+  let body: unknown;
+  try {
+    body = await res.json();
+  } catch {
+    throw new Error(`Invalid API response (HTTP ${res.status}).`);
   }
-  return body as T;
+  if (!res.ok) {
+    const error = z
+      .looseObject({ error: z.union([z.string(), z.looseObject({ message: z.string() })]) })
+      .safeParse(body);
+    const message = error.success ? error.data.error : undefined;
+    throw new Error(
+      typeof message === "string"
+        ? message
+        : (message?.message ?? `Request failed (HTTP ${res.status}).`),
+    );
+  }
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) throw new Error("Invalid Proxmox API response.");
+  return parsed.data;
+}
+
+const nodeName = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/);
+const guestKind = z.enum(["qemu", "lxc"]);
+const guestId = z.number().int().positive();
+
+function actionPath(node: string, kind: string, vmid: number, action: "start" | "stop"): string {
+  const values = z.tuple([nodeName, guestKind, guestId]).safeParse([node, kind, vmid]);
+  if (!values.success) throw new Error("Invalid Proxmox guest reference.");
+  return `/api/warden/proxmox/guests/${encodeURIComponent(values.data[0])}/${values.data[1]}/${values.data[2]}/${action}`;
 }
 
 export const proxmoxService = {
-  status: () => req<ProxmoxStatus>("/api/warden/proxmox/status"),
-  guests: () => req<{ count: number; items: ProxmoxGuest[] }>("/api/warden/proxmox/guests"),
+  status: () => req("/api/warden/proxmox/status", proxmoxStatusSchema),
+  guests: () => req("/api/warden/proxmox/guests", proxmoxGuestsSchema),
   start: (node: string, kind: string, vmid: number) =>
-    req<GuestActionResult>(`/api/warden/proxmox/guests/${node}/${kind}/${vmid}/start`, {
-      method: "POST",
-    }),
+    req(actionPath(node, kind, vmid, "start"), guestActionSchema, { method: "POST" }),
   stop: (node: string, kind: string, vmid: number) =>
-    req<GuestActionResult>(`/api/warden/proxmox/guests/${node}/${kind}/${vmid}/stop`, {
-      method: "POST",
-    }),
+    req(actionPath(node, kind, vmid, "stop"), guestActionSchema, { method: "POST" }),
 };

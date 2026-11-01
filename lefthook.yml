@@ -1,0 +1,5 @@
+pre-commit:
+  jobs:
+    - name: biome-reviewed-proxmox
+      glob: 'src/domains/warden/proxmox/{proxmox.schema.ts,proxmox.svc.ts,proxmox.svc.test.mjs,types.ts}'
+      run: npx --no-install biome check {staged_files}
