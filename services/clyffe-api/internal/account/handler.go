@@ -14,9 +14,21 @@ type Handler struct{ store *Store }
 func NewHandler(store *Store) *Handler { return &Handler{store: store} }
 
 func (h *Handler) Routes(r chi.Router) {
-	r.Get("/api/clyffe/home", h.home)
-	r.Get("/api/clyffe/accounts", h.accounts)
-	r.Get("/api/clyffe/orders", h.orders)
+	// The current stores read across tenants and no customer identity or
+	// membership is verified. Do not expose these handlers until a replacement
+	// enforces authorization and scopes every database operation.
+	r.Group(func(r chi.Router) {
+		r.Use(unavailableUntilTenantAuthorization)
+		r.Get("/api/clyffe/home", h.home)
+		r.Get("/api/clyffe/accounts", h.accounts)
+		r.Get("/api/clyffe/orders", h.orders)
+	})
+}
+
+func unavailableUntilTenantAuthorization(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		platform.Error(w, http.StatusServiceUnavailable, "customer account access is not available")
+	})
 }
 
 func (h *Handler) accounts(w http.ResponseWriter, r *http.Request) {
