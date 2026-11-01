@@ -11,18 +11,24 @@ import (
 
 // Handler exposes Proxmox inventory + task-true actions.
 type Handler struct {
-	svc *Service
+	svc   *Service
+	authz platform.Authorizer
 }
 
-func NewHandler(svc *Service) *Handler { return &Handler{svc: svc} }
+func NewHandler(svc *Service, authz platform.Authorizer) *Handler {
+	return &Handler{svc: svc, authz: authz}
+}
 
 // Routes mounts under /api/warden/proxmox.
 func (h *Handler) Routes(r chi.Router) {
-	r.Get("/api/warden/proxmox/status", h.status)
-	r.Get("/api/warden/proxmox/guests", h.guests)
-	r.Post("/api/warden/proxmox/guests/{node}/{kind}/{vmid}/start", h.start)
-	r.Post("/api/warden/proxmox/guests/{node}/{kind}/{vmid}/stop", h.stop)
-	r.Get("/api/warden/proxmox/actions/{id}", h.action)
+	r.Group(func(r chi.Router) {
+		r.Use(platform.RequireOperator(h.authz))
+		r.Get("/api/warden/proxmox/status", h.status)
+		r.Get("/api/warden/proxmox/guests", h.guests)
+		r.Post("/api/warden/proxmox/guests/{node}/{kind}/{vmid}/start", h.start)
+		r.Post("/api/warden/proxmox/guests/{node}/{kind}/{vmid}/stop", h.stop)
+		r.Get("/api/warden/proxmox/actions/{id}", h.action)
+	})
 }
 
 func (h *Handler) status(w http.ResponseWriter, r *http.Request) {
