@@ -8,12 +8,17 @@ import (
 	"github.com/shippin/shippin-api/internal/platform"
 )
 
-type Handler struct{ svc *Service }
+type Handler struct {
+	svc   *Service
+	authz platform.Authorizer
+}
 
-func NewHandler(svc *Service) *Handler { return &Handler{svc: svc} }
+func NewHandler(svc *Service, authz platform.Authorizer) *Handler {
+	return &Handler{svc: svc, authz: authz}
+}
 
 func (h *Handler) Routes(r chi.Router) {
-	r.Post("/api/warden/provision", h.provision)
+	r.With(platform.RequireOperator(h.authz)).Post("/api/warden/provision", h.provision)
 }
 
 func (h *Handler) provision(w http.ResponseWriter, r *http.Request) {

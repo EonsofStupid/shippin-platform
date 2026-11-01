@@ -11,16 +11,24 @@ import (
 )
 
 // Handler exposes the Supabase-inspired data API under /api/warden/data.
-type Handler struct{ store *Store }
+type Handler struct {
+	store *Store
+	authz platform.Authorizer
+}
 
-func NewHandler(store *Store) *Handler { return &Handler{store: store} }
+func NewHandler(store *Store, authz platform.Authorizer) *Handler {
+	return &Handler{store: store, authz: authz}
+}
 
 func (h *Handler) Routes(r chi.Router) {
-	r.Get("/api/warden/data/schemas", h.schemas)
-	r.Get("/api/warden/data/schemas/{schema}/tables", h.tables)
-	r.Get("/api/warden/data/tables/{schema}/{table}", h.columns)
-	r.Get("/api/warden/data/tables/{schema}/{table}/rows", h.rows)
-	r.Post("/api/warden/data/query", h.query)
+	r.Group(func(r chi.Router) {
+		r.Use(platform.RequireOperator(h.authz))
+		r.Get("/api/warden/data/schemas", h.schemas)
+		r.Get("/api/warden/data/schemas/{schema}/tables", h.tables)
+		r.Get("/api/warden/data/tables/{schema}/{table}", h.columns)
+		r.Get("/api/warden/data/tables/{schema}/{table}/rows", h.rows)
+		r.Post("/api/warden/data/query", h.query)
+	})
 }
 
 func (h *Handler) schemas(w http.ResponseWriter, r *http.Request) {
