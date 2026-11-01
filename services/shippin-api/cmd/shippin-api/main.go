@@ -78,7 +78,7 @@ func main() {
 	connect.NewHandler(connect.NewStore(cfg.RepoRoot), operatorAuthz).Routes(r)
 	clyffy.NewHandler(clyffy.NewStore(pool)).Routes(r)
 	// Slice 0: Proxmox substrate inventory + task-true start/stop.
-	proxmox.NewHandler(proxmox.NewService(proxmox.LoadConfig(), pool, auditSink)).Routes(r)
+	proxmox.NewHandler(proxmox.NewService(proxmox.LoadConfig(), pool, auditSink), operatorAuthz).Routes(r)
 
 	srv := &http.Server{
 		Addr:              cfg.Addr,

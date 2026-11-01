@@ -1,6 +1,7 @@
 // Slice 0 — Warden technical view: Proxmox is the OS for VMs/LXCs; Warden manages it.
 import { useCallback, useEffect, useState } from "react";
 import { Badge, Button, Card } from "../../../../lib/design";
+import { useAuth } from "../../identity";
 import { proxmoxService } from "../proxmox.svc";
 import type { GuestActionResult, ProxmoxGuest, ProxmoxStatus } from "../types";
 
@@ -10,6 +11,7 @@ function fmtMem(bytes?: number) {
 }
 
 export function ProxmoxFleetView() {
+  const { token } = useAuth();
   const [status, setStatus] = useState<ProxmoxStatus | null>(null);
   const [guests, setGuests] = useState<ProxmoxGuest[]>([]);
   const [err, setErr] = useState<string | null>(null);
@@ -19,10 +21,10 @@ export function ProxmoxFleetView() {
   const load = useCallback(async () => {
     setErr(null);
     try {
-      const st = await proxmoxService.status();
+      const st = await proxmoxService.status(token ?? "");
       setStatus(st);
       if (st.configured && st.reachable) {
-        const g = await proxmoxService.guests();
+        const g = await proxmoxService.guests(token ?? "");
         setGuests(g.items.filter((x) => !x.template));
       } else {
         setGuests([]);
@@ -30,7 +32,7 @@ export function ProxmoxFleetView() {
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     void load();
@@ -43,8 +45,8 @@ export function ProxmoxFleetView() {
     try {
       const res =
         op === "start"
-          ? await proxmoxService.start(g.node, g.kind, g.vmid)
-          : await proxmoxService.stop(g.node, g.kind, g.vmid);
+          ? await proxmoxService.start(token ?? "", g.node, g.kind, g.vmid)
+          : await proxmoxService.stop(token ?? "", g.node, g.kind, g.vmid);
       setLastAction(res);
       await load();
     } catch (e) {

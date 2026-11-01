@@ -1,9 +1,15 @@
 import { z } from "zod";
 import { guestActionSchema, proxmoxGuestsSchema, proxmoxStatusSchema } from "./proxmox.schema.ts";
 
-async function req<T>(path: string, schema: z.ZodType<T>, init?: RequestInit): Promise<T> {
+async function req<T>(
+  path: string,
+  token: string,
+  schema: z.ZodType<T>,
+  init?: RequestInit,
+): Promise<T> {
+  if (!token.trim()) throw new Error("Operator authentication is required.");
   const res = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     ...init,
   });
   let body: unknown;
@@ -39,10 +45,10 @@ function actionPath(node: string, kind: string, vmid: number, action: "start" | 
 }
 
 export const proxmoxService = {
-  status: () => req("/api/warden/proxmox/status", proxmoxStatusSchema),
-  guests: () => req("/api/warden/proxmox/guests", proxmoxGuestsSchema),
-  start: (node: string, kind: string, vmid: number) =>
-    req(actionPath(node, kind, vmid, "start"), guestActionSchema, { method: "POST" }),
-  stop: (node: string, kind: string, vmid: number) =>
-    req(actionPath(node, kind, vmid, "stop"), guestActionSchema, { method: "POST" }),
+  status: (token: string) => req("/api/warden/proxmox/status", token, proxmoxStatusSchema),
+  guests: (token: string) => req("/api/warden/proxmox/guests", token, proxmoxGuestsSchema),
+  start: (token: string, node: string, kind: string, vmid: number) =>
+    req(actionPath(node, kind, vmid, "start"), token, guestActionSchema, { method: "POST" }),
+  stop: (token: string, node: string, kind: string, vmid: number) =>
+    req(actionPath(node, kind, vmid, "stop"), token, guestActionSchema, { method: "POST" }),
 };

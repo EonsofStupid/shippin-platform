@@ -16,7 +16,7 @@ test("Proxmox client validates actual responses and action requests", async (t) 
   let raw = false;
   const requests = [];
   const server = http.createServer((req, res) => {
-    requests.push({ method: req.method, url: req.url });
+    requests.push({ method: req.method, url: req.url, authorization: req.headers.authorization });
     res.writeHead(code, { "Content-Type": "application/json" });
     res.end(raw ? response : JSON.stringify(response));
   });
@@ -31,20 +31,20 @@ test("Proxmox client validates actual responses and action requests", async (t) 
     );
   });
 
-  assert.equal((await proxmoxService.status()).reachable, true);
+  assert.equal((await proxmoxService.status("test-session")).reachable, true);
   response = { ...response, reachable: "true" };
-  await assert.rejects(proxmoxService.status(), /Invalid Proxmox API response/);
+  await assert.rejects(proxmoxService.status("test-session"), /Invalid Proxmox API response/);
   response = { count: 0, items: null };
-  assert.deepEqual((await proxmoxService.guests()).items, []);
+  assert.deepEqual((await proxmoxService.guests("test-session")).items, []);
   response = { count: 1, items: null };
-  await assert.rejects(proxmoxService.guests(), /Invalid Proxmox API response/);
+  await assert.rejects(proxmoxService.guests("test-session"), /Invalid Proxmox API response/);
   response = {
     count: 1,
     items: [
       { node: "node1", kind: "qemu", vmid: 101, name: "vm", status: "running", stable_label: "id" },
     ],
   };
-  assert.equal((await proxmoxService.guests()).items[0].vmid, 101);
+  assert.equal((await proxmoxService.guests("test-session")).items[0].vmid, 101);
   response = {
     action_request_id: "id",
     kind: "guest_start",
@@ -53,26 +53,31 @@ test("Proxmox client validates actual responses and action requests", async (t) 
     vmid: 101,
     status: "succeeded",
   };
-  assert.equal((await proxmoxService.start("node1", "qemu", 101)).status, "succeeded");
+  assert.equal(
+    (await proxmoxService.start("test-session", "node1", "qemu", 101)).status,
+    "succeeded",
+  );
   assert.deepEqual(requests.at(-1), {
     method: "POST",
     url: "/api/warden/proxmox/guests/node1/qemu/101/start",
+    authorization: "Bearer test-session",
   });
   const before = requests.length;
+  await assert.rejects(proxmoxService.status(""), /Operator authentication is required/);
   assert.throws(
-    () => proxmoxService.stop("../node", "qemu", 101),
+    () => proxmoxService.stop("test-session", "../node", "qemu", 101),
     /Invalid Proxmox guest reference/,
   );
   assert.throws(
-    () => proxmoxService.stop("node1", "other", 101),
+    () => proxmoxService.stop("test-session", "node1", "other", 101),
     /Invalid Proxmox guest reference/,
   );
   assert.equal(requests.length, before);
   code = 403;
   response = { error: { status: 403, message: "Access denied" } };
-  await assert.rejects(proxmoxService.status(), /Access denied/);
+  await assert.rejects(proxmoxService.status("test-session"), /Access denied/);
   code = 200;
   raw = true;
   response = "not-json";
-  await assert.rejects(proxmoxService.status(), /Invalid API response/);
+  await assert.rejects(proxmoxService.status("test-session"), /Invalid API response/);
 });
