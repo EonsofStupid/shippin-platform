@@ -9,17 +9,25 @@ import (
 )
 
 // Handler exposes the Clyffy orchestrator under /api/clyffy.
-type Handler struct{ store *Store }
+type Handler struct {
+	store *Store
+	authz platform.Authorizer
+}
 
-func NewHandler(store *Store) *Handler { return &Handler{store: store} }
+func NewHandler(store *Store, authz platform.Authorizer) *Handler {
+	return &Handler{store: store, authz: authz}
+}
 
 func (h *Handler) Routes(r chi.Router) {
-	r.Get("/api/clyffy/home", h.home)
-	r.Get("/api/clyffy/services", h.services)
-	r.Get("/api/clyffy/platforms", h.platforms)
-	r.Get("/api/clyffy/intelligence", h.intelligence)
-	r.Get("/api/clyffy/plugins", h.plugins)       // AI-only intelligence plane
-	r.Get("/api/clyffy/connectors", h.connectors) // operator+AI shared surfaces
+	r.Group(func(r chi.Router) {
+		r.Use(platform.RequireOperator(h.authz))
+		r.Get("/api/clyffy/home", h.home)
+		r.Get("/api/clyffy/services", h.services)
+		r.Get("/api/clyffy/platforms", h.platforms)
+		r.Get("/api/clyffy/intelligence", h.intelligence)
+		r.Get("/api/clyffy/plugins", h.plugins)
+		r.Get("/api/clyffy/connectors", h.connectors)
+	})
 }
 
 func (h *Handler) plugins(w http.ResponseWriter, r *http.Request) {

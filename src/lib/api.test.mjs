@@ -28,8 +28,14 @@ test("staff data and fleet requests carry the operator session", async (t) => {
   await api.columns("session", "shippin_core", "tenants");
   await api.rows("session", "shippin_core", "tenants");
   await api.query("session", "select 1");
-  assert.equal(requests.length, 7);
+  await api.clyffyHome("session");
+  await api.clyffyServices("session");
+  await api.clyffyPlugins("session");
+  await api.clyffyConnectors("session");
+  await api.clyffyIntelligence("session");
+  assert.equal(requests.length, 12);
   assert.ok(requests.every((request) => request.authorization === "Bearer session"));
   await assert.rejects(api.workspaces(null), /Operator authentication is required/);
-  assert.equal(requests.length, 7);
+  await assert.rejects(api.clyffyServices(null), /Operator authentication is required/);
+  assert.equal(requests.length, 12);
 });
